@@ -1,0 +1,33 @@
+--The syntax of this file is Lua Table.
+Language			=	"ar";		--language abbreviate
+LanguageDetail		=	"Arabic";	--language full name
+DGSWidgets			=	"أدوات DGS";
+DGSPropertyList		=	"قائمة خصائص DGS";
+Basic				=	"أساسي";
+Plugins				=	"الإضافات";
+DGSButton			=	"زر";
+DGSCheckBox			=	"خانة اختيار";
+DGSComboBox			=	"صندوق التحرير";
+DGSGridList			=	"قائمة الاختيار";
+DGSImage			=	"صورة";
+DGSLabel			=	"ليبل";
+DGSMemo				=	"ميمو";
+DGSProgressBar		=	"شريط التحميل";
+DGSRadioButton		=	"زر الاختيار";
+DGSScrollBar		=	"شريط التمرير";
+DGSScrollPane		=	"جزء التمرير";
+DGSSelector			=	"تحديد";
+DGSSwitchButton		=	"زر التغيير";
+DGSTabPanel			=	"لوحة اخري";
+DGSWindow			=	"لوحة";
+
+
+
+--Notifications:
+DGSStop				=	"تم ايقاف المود Dgs !";
+DGSIsNotRun			=	"تعذر العثور على مورد DGS قيد التشغيل ، يرجى بدء DGS!";
+DGSIsRun			=	"تم الكشف عن مورد DGS. المحرر متاح الآن!";
+FailToChgLang		=	"فشل التغيير إلى اللغة٪ rep٪";
+ChgLang				=	"تم تغيير اللغة الآن إلى٪ rep٪ (٪ rep٪)";
+EditorEnabled		=	"Editor is now #00FF00Enabled!";
+EditorDisabled		=	"Editor is now #FF0000Disabled!";
