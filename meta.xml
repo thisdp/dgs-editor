@@ -1,0 +1,28 @@
+<meta>
+    <info author="thisdp" version="0.1" name="DGS Editor" description="Editor for DGS" type="misc" />
+    <script src="client/c_utility.lua" type="client" />
+    <script src="languages/languageManager.lua" type="client" />
+	<file src="languages/en-us.lang" />
+	<file src="languages/zh-cn.lang" />
+	
+    <script src="client/c_settings.lua" type="client" />
+    <script src="client/c_main.lua" type="client" />
+    <script src="server/s_main.lua" type="server" />
+	
+	<file src="icons/DGSButton.png" />
+	<file src="icons/DGSCheckBox.png" />
+	<file src="icons/DGSComboBox.png" />
+	<file src="icons/DGSGridList.png" />
+	<file src="icons/DGSImage.png" />
+	<file src="icons/DGSLabel.png" />
+	<file src="icons/DGSMemo.png" />
+	<file src="icons/DGSProgressBar.png" />
+	<file src="icons/DGSRadioButton.png" />
+	<file src="icons/DGSScrollBar.png" />
+	<file src="icons/DGSScrollPane.png" />
+	<file src="icons/DGSSelector.png" />
+	<file src="icons/DGSSwitchButton.png" />
+	<file src="icons/DGSTabPanel.png" />
+	<file src="icons/DGSWindow.png" />
+    <oop>true</oop>
+</meta>

@@ -1,0 +1,33 @@
+--The syntax of this file is Lua Table.
+Language			=	"zh-cn";		--language abbreviate
+LanguageDetail		=	"简体中文";		--language full name
+DGSWidgets			=	"DGS控件";
+DGSPropertyList		=	"DGS属性列表";
+Basic				=	"基础控件";
+Plugins				=	"插件";
+DGSButton			=	"按钮";
+DGSCheckBox			=	"复选框";
+DGSComboBox			=	"组合框";
+DGSGridList			=	"网格列表";
+DGSImage			=	"图片";
+DGSLabel			=	"文本框";
+DGSMemo				=	"多行编辑框";
+DGSProgressBar		=	"进度条";
+DGSRadioButton		=	"单选框";
+DGSScrollBar		=	"滚动条";
+DGSScrollPane		=	"滚动窗格";
+DGSSelector			=	"选择器";
+DGSSwitchButton		=	"开关按钮";
+DGSTabPanel			=	"标签面板";
+DGSWindow			=	"窗口";
+
+
+
+--Notifications:
+DGSStop				=	"DGS已经停止！";
+DGSIsNotRun			=	"无法找到正在运行的DGS，请启动DGS！";
+DGSIsRun			=	"检测到已经启动的DGS，编辑器已经准备就绪！";
+FailToChgLang		=	"无法切换语言为 %rep%";
+ChgLang				=	"当前使用语言已经切换为 %rep%(%rep%)";
+EditorEnabled		=	"编辑器已经#00FF00启用!";
+EditorDisabled		=	"编辑器已经#FF0000禁用!";
