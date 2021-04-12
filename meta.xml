@@ -4,6 +4,7 @@
     <script src="languages/languageManager.lua" type="client" />
 	<file src="languages/en-us.lang" />
 	<file src="languages/zh-cn.lang" />
+	<file src="languages/ar.lang" />
 	
     <script src="client/c_settings.lua" type="client" />
     <script src="client/c_main.lua" type="client" />

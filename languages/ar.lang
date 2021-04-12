@@ -1,0 +1,33 @@
+--The syntax of this file is Lua Table.
+Language			=	"ar";		--language abbreviate
+LanguageDetail		=	"العربية";	--language full name
+DGSWidgets			=	"DGS أدوات";
+DGSPropertyList		=	"DGS قائمة خصائص";
+Basic				=	"أساسي";
+Plugins				=	"الإضافات";
+DGSButton			=	"زر";
+DGSCheckBox			=	"خانة التحقق";
+DGSComboBox			=	"صندوق الاختيار";
+DGSGridList			=	"قائمة";
+DGSImage			=	"صورة";
+DGSLabel			=	"نص";
+DGSMemo				=	""صندوق الكتابة"";
+DGSProgressBar		=	"شريط التقدم";
+DGSRadioButton		=	"خانة الاختيار";
+DGSScrollBar		=	"شريط التمرير";
+DGSScrollPane		=	"منطقة التمرير";
+DGSSelector			=	"المحدد";
+DGSSwitchButton		=	"زر التغيير";
+DGSTabPanel			=	"لوحة القوائم";
+DGSWindow			=	"نافذة";
+
+
+
+--Notifications:
+DGSStop				=	"!DGS تم إيقاف مود";
+DGSIsNotRun			=	"!يرجى بدء تشغيله DGS لم يتم العثور على";
+DGSIsRun			=	"!المحرر متاح الآن DGS تم العثور على";
+FailToChgLang		=	"%rep% فشل تغيير اللغة إلى";
+ChgLang				=	"%rep%(%rep%) تم تغيير اللغة إلى";
+EditorEnabled		=	"#00FF00!مفعل #FFFFFFالمحرر الآن";
+EditorDisabled		=	"#FF0000!معطل #FFFFFFالمحرر الآن";

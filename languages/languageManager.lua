@@ -2,6 +2,7 @@ Language = {
 	Files = {
 		"en-us",
 		"zh-cn",
+		"ar",
 	},
 	Loaded = {},
 	UsingLanguageTable = false,
