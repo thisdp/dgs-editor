@@ -1,33 +1,33 @@
 --The syntax of this file is Lua Table.
 Language			=	"ar";		--language abbreviate
-LanguageDetail		=	"Arabic";	--language full name
-DGSWidgets			=	"أدوات DGS";
-DGSPropertyList		=	"قائمة خصائص DGS";
+LanguageDetail		=	"العربية";	--language full name
+DGSWidgets			=	"DGS أدوات";
+DGSPropertyList		=	"DGS قائمة خصائص";
 Basic				=	"أساسي";
 Plugins				=	"الإضافات";
 DGSButton			=	"زر";
-DGSCheckBox			=	"خانة اختيار";
-DGSComboBox			=	"صندوق التحرير";
-DGSGridList			=	"قائمة الاختيار";
+DGSCheckBox			=	"خانة التحقق";
+DGSComboBox			=	"صندوق الاختيار";
+DGSGridList			=	"قائمة";
 DGSImage			=	"صورة";
-DGSLabel			=	"ليبل";
-DGSMemo				=	"ميمو";
-DGSProgressBar		=	"شريط التحميل";
-DGSRadioButton		=	"زر الاختيار";
+DGSLabel			=	"نص";
+DGSMemo				=	""صندوق الكتابة"";
+DGSProgressBar		=	"شريط التقدم";
+DGSRadioButton		=	"خانة الاختيار";
 DGSScrollBar		=	"شريط التمرير";
-DGSScrollPane		=	"جزء التمرير";
-DGSSelector			=	"تحديد";
+DGSScrollPane		=	"منطقة التمرير";
+DGSSelector			=	"المحدد";
 DGSSwitchButton		=	"زر التغيير";
-DGSTabPanel			=	"لوحة اخري";
-DGSWindow			=	"لوحة";
+DGSTabPanel			=	"لوحة القوائم";
+DGSWindow			=	"نافذة";
 
 
 
 --Notifications:
-DGSStop				=	"تم ايقاف المود Dgs !";
-DGSIsNotRun			=	"تعذر العثور على مورد DGS قيد التشغيل ، يرجى بدء DGS!";
-DGSIsRun			=	"تم الكشف عن مورد DGS. المحرر متاح الآن!";
-FailToChgLang		=	"فشل التغيير إلى اللغة٪ rep٪";
-ChgLang				=	"تم تغيير اللغة الآن إلى٪ rep٪ (٪ rep٪)";
-EditorEnabled		=	"Editor is now #00FF00Enabled!";
-EditorDisabled		=	"Editor is now #FF0000Disabled!";
+DGSStop				=	"!DGS تم إيقاف مود";
+DGSIsNotRun			=	"!يرجى بدء تشغيله DGS لم يتم العثور على";
+DGSIsRun			=	"!المحرر متاح الآن DGS تم العثور على";
+FailToChgLang		=	"%rep% فشل تغيير اللغة إلى";
+ChgLang				=	"%rep%(%rep%) تم تغيير اللغة إلى";
+EditorEnabled		=	"#00FF00!مفعل #FFFFFFالمحرر الآن";
+EditorDisabled		=	"#FF0000!معطل #FFFFFFالمحرر الآن";
