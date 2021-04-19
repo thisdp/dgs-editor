@@ -102,6 +102,7 @@ DGSTypeReference = {
 	{"dgs-dximage","DGSImage"},
 	{"dgs-dxlabel","DGSLabel"},
 	{"dgs-dxmemo","DGSMemo"},
+	{"dgs-dxedit","DGSEdit"},
 	{"dgs-dxprogressbar","DGSProgressBar"},
 	{"dgs-dxradiobutton","DGSRadioButton"},
 	{"dgs-dxscrollbar","DGSScrollBar"},
