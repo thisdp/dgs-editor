@@ -26,6 +26,7 @@ function dgsEditorSwitchState(state)
 				dgsEditorCreateMainPanel()
 			else
 				dgsEditor.BackGround.visible = true
+				dgsEditor.WidgetMain.visible = true
 			end
 			showCursor(true)
 		end
@@ -33,6 +34,7 @@ function dgsEditorSwitchState(state)
 		dgsEditor.state = "disabled"	--Just disable
 		dgsEditorMakeOutput(translateText({"EditorDisabled"}))
 		dgsEditor.BackGround.visible = false
+		dgsEditor.WidgetMain.visible = false
 		showCursor(false)
 		triggerEvent("onClientDGSEditorStateChanged",resourceRoot,dgsEditor.state)
 	end
