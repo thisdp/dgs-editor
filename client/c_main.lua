@@ -18,15 +18,22 @@ function dgsEditorSwitchState(state)
 			dgsEditor.state = "enabled"					--Enabled
 			dgsEditorMakeOutput(translateText({"EditorEnabled"}))
 			triggerEvent("onClientDGSEditorStateChanged",resourceRoot,dgsEditor.state)
-			loadstring(exports[dgsEditorContext.dgsResourceName]:dgsImportOOPClass())()
-			dgsRootInstance:setElementKeeperEnabled(true)
-			dgsRootInstance:setTranslationTable("DGSEditorLanguage",Language.UsingLanguageTable)	--Set translation dictionary whenever a new language applies
-			dgsRootInstance:setAttachTranslation("DGSEditorLanguage")	--Use this dictionary
-			dgsEditorCreateMainPanel()
+			if not dgsEditor.Created then
+				loadstring(exports[dgsEditorContext.dgsResourceName]:dgsImportOOPClass())()
+				dgsRootInstance:setElementKeeperEnabled(true)
+				dgsRootInstance:setTranslationTable("DGSEditorLanguage",Language.UsingLanguageTable)	--Set translation dictionary whenever a new language applies
+				dgsRootInstance:setAttachTranslation("DGSEditorLanguage")	--Use this dictionary
+				dgsEditorCreateMainPanel()
+			else
+				dgsEditor.BackGround.visible = true
+			end
+			showCursor(true)
 		end
 	elseif state == "disabled" then		--If someone want to disable dgs editor
 		dgsEditor.state = "disabled"	--Just disable
 		dgsEditorMakeOutput(translateText({"EditorDisabled"}))
+		dgsEditor.BackGround.visible = false
+		showCursor(false)
 		triggerEvent("onClientDGSEditorStateChanged",resourceRoot,dgsEditor.state)
 	end
 end
@@ -42,6 +49,7 @@ end)
 ------------------------------------------------------Main Panel
 function dgsEditorCreateMainPanel()
 	dgsEditor.ElementList = {}	--Used to store created elements createed by user
+	dgsEditor.Created = true
 	dgsEditor.BackGround = dgsImage(0,0,1,1,_,true,tocolor(0,0,0,100))	--Main Background
 	dgsEditor.Canvas = dgsEditor.BackGround:dgsScalePane(0.2,0.2,0.6,0.6,true,sW,sH)	--Main Canvas
 	dgsEditor.Canvas.bgColor = tocolor(0,0,0,128)
@@ -194,7 +202,7 @@ end
 local ctrlSize = 10
 function dgsEditorCreateController(theCanvas)	--Create the controller
 	local RightCenter,RightTop,CenterTop,LeftTop,LeftCenter,LeftBottom,CenterBottom,RightBottom	--Define the 8 controlling circles
-	local Ring = dgsCreateCircle(0.45,0.3)	--circles
+	local Ring = dgsCreateCircle(0.45,0.3,360)	--circles
 	local Line = theCanvas:dgsLine(0,0,0,0,false,2,tocolor(255,0,0,255))	--the highlight line (controller)
 		:setProperty("hitoutofparent",true)
 		:setProperty("isController",true)
