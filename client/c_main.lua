@@ -53,19 +53,22 @@ function dgsEditorCreateMainPanel()
 	dgsEditor.BackGround = dgsImage(0,0,1,1,_,true,tocolor(0,0,0,100))	--Main Background
 	dgsEditor.Canvas = dgsEditor.BackGround:dgsScalePane(0.2,0.2,0.6,0.6,true,sW,sH)	--Main Canvas
 	dgsEditor.Canvas.bgColor = tocolor(0,0,0,128)
-	dgsEditor.WidgetMain = dgsWindow(0,0,0.18,0.5,{"DGSWidgets"},true)	--Widgets Window
+	dgsEditor.WidgetMain = dgsWindow(0,0,250,0.5*sH,{"DGSWidgets"},false)	--Widgets Window
 		:setCloseButtonEnabled(false)
 		:setSizable(false)
+		:setMovable(false)
+		:setParent(dgsEditor.BackGround)
+		:setProperty("shadow",{1,1,0xFF000000})
+		:setProperty("titleColorBlur",false)
 		:setProperty("color",tocolor(0,0,0,128))
 		:setProperty("titleColor",tocolor(0,0,0,128))
-		:setLayer("top")
 		:setProperty("textSize",{1.3,1.3})
 	
 	dgsEditor.WidgetSpliter = dgsEditor.WidgetMain	--The Vertical Spliter Line
-		:dgsImage(80,0,5,100,_,false,tocolor(50,50,50,200))
+		:dgsImage(80,0,5,0.5*sH-25,_,false,tocolor(50,50,50,200))
 		
 	dgsEditor.WidgetTypeList = dgsEditor.WidgetMain	--Type List
-		:dgsGridList(10,0,70,200,false)
+		:dgsGridList(0,0,80,200,false)
 		:setProperty("rowHeight",25)
 		:setProperty("columnHeight",0)
 		:setProperty("rowTextSize",{1.2,1.2})
@@ -84,10 +87,11 @@ function dgsEditorCreateMainPanel()
 	dgsEditor.WidgetTypeList:addRow(_,{"Plugins"})
 	
 	dgsEditor.WidgetList = dgsEditor.WidgetMain	--Widget List
-		:dgsGridList(85,0,155,370,false)
+		:dgsGridList(85,0,165,0.5*sH-25,false)
 		:setProperty("rowHeight",30)
 		:setProperty("columnHeight",0)
 		:setProperty("rowTextSize",{1.2,1.2})
+		:setProperty("scrollBarThick",10)
 		:setProperty("bgColor",tocolor(0,0,0,0))
 		:on("dgsGridListSelect",function(rNew,_,rOld,_)
 			if rOld ~= -1 then
@@ -103,6 +107,7 @@ function dgsEditorCreateMainPanel()
 				dgsEditorCreateElement(DGSTypeReference[widgetID][1])
 			end
 		end)
+	
 	dgsEditor.WidgetList:addColumn(_,0.2)	--Icon
 	dgsEditor.WidgetList:addColumn(_,0.7)	--Namne
 	for i=1,#DGSTypeReference do

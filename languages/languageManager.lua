@@ -17,7 +17,6 @@ function checkLanguages()	--Check all languages
 			fileClose(f)
 			local fnc,err = loadstring("return { "..str.." }")
 			if fnc then
-				dgsEditorMakeOutput("Language file: "..languageFile.." was loaded","green",true)
 				Language.Loaded[ Language.Files[i] ] = fnc()
 				if Language.Files[i] == defaultLanguage then
 					Language.UsingLanguageTable = Language.Loaded[ Language.Files[i] ]
@@ -29,6 +28,7 @@ function checkLanguages()	--Check all languages
 			dgsEditorMakeOutput("Missing language file: "..languageFile,"yellow",true)
 		end
 	end
+	dgsEditorMakeOutput("Language Manager: "..table.count(Language.Loaded).." language files was loaded","green",true)
 	if not Language.UsingLanguageTable then
 		outputChatBox("Error: can not load default language!",255,0,0)
 		error("Error: can not load default language!")

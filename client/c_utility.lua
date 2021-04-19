@@ -88,6 +88,14 @@ function table.integrate(t1,t2)
 	return newTable
 end
 
+function table.count(tabl)
+	local cnt = 0
+	for k,v in pairs(tabl) do
+		cnt = cnt + 1
+	end
+	return cnt
+end
+
 ------------------Events
 
 addEvent("onClientDGSEditorRequestStateChange",true)	--When DGS editor's state changes (available or disabled)
