@@ -38,6 +38,7 @@ function dgsEditorSwitchState(state)
 		showCursor(false)
 		triggerEvent("onClientDGSEditorStateChanged",resourceRoot,dgsEditor.state)
 	end
+	showChat(not dgsEditor.WidgetMain.visible)
 end
 addEventHandler("onClientDGSEditorRequestStateChange",root,dgsEditorSwitchState)
 
