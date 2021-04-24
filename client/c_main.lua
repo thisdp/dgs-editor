@@ -156,9 +156,37 @@ function dgsEditorCreateElement(dgsType,...)
 --	if #arguments == 0 then
 	local createdElement
 	if dgsType == "dgs-dxbutton" then
-		createdElement = dgsEditor.Canvas:dgsButton(0,0,50,30,"Button",false)
+		createdElement = dgsEditor.Canvas:dgsButton(0,0,80,30,"Button",false)
 	elseif dgsType == "dgs-dximage" then
-		createdElement = dgsEditor.Canvas:dgsImage(0,0,50,30,_,false)
+		createdElement = dgsEditor.Canvas:dgsImage(0,0,80,80,_,false)
+	elseif dgsType == "dgs-dxcheckbox" then
+		createdElement = dgsEditor.Canvas:dgsCheckBox(0,0,80,30,"Check Box",false,false)
+	elseif dgsType == "dgs-dxradiobutton" then
+		createdElement = dgsEditor.Canvas:dgsRadioButton(0,0,80,30,"Radio Button",false)
+	elseif dgsType == "dgs-dxedit" then
+		createdElement = dgsEditor.Canvas:dgsEdit(0,0,100,30,"Edit",false)
+	elseif dgsType == "dgs-dxgridlist" then
+		createdElement = dgsEditor.Canvas:dgsGridList(0,0,100,100,false)
+	elseif dgsType == "dgs-dxscrollpane" then
+		createdElement = dgsEditor.Canvas:dgsScrollPane(0,0,100,100,false)
+	elseif dgsType == "dgs-dxcombobox" then
+		createdElement = dgsEditor.Canvas:dgsComboBox(0,0,100,30,false)
+	elseif dgsType == "dgs-dxmemo" then
+		createdElement = dgsEditor.Canvas:dgsMemo(0,0,100,60,"Memo",false)
+	elseif dgsType == "dgs-dxprogressbar" then
+		createdElement = dgsEditor.Canvas:dgsProgressBar(0,0,100,30,false)
+	elseif dgsType == "dgs-dxlabel" then
+		createdElement = dgsEditor.Canvas:dgsLabel(0,0,50,30,"Label",false)
+	elseif dgsType == "dgs-dxscrollbar" then
+		createdElement = dgsEditor.Canvas:dgsScrollBar(0,0,20,150,false,false)
+	elseif dgsType == "dgs-dxswitchbutton" then
+		createdElement = dgsEditor.Canvas:dgsSwitchButton(0,0,80,20,"On","Off",false)
+	elseif dgsType == "dgs-dxselector" then
+		createdElement = dgsEditor.Canvas:dgsSelector(0,0,80,20,false)
+	elseif dgsType == "dgs-dxwindow" then
+		createdElement = dgsEditor.Canvas:dgsWindow(0,0,100,100,"window",false)
+	elseif dgsType == "dgs-dxtabpanel" then
+		createdElement = dgsEditor.Canvas:dgsTabPanel(0,0,100,100,false)
 	end
 	createdElement.isCreatedByEditor = true
 	createdElement:on("dgsMouseClickDown",function()	--When clicking the element

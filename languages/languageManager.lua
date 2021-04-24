@@ -34,6 +34,19 @@ function checkLanguages()	--Check all languages
 		outputChatBox("Error: can not load default language!",255,0,0)
 		error("Error: can not load default language!")
 	end
+	local fullLanguage = Language.Loaded[ Language.Files[1] ]
+	for langIndex, langName in ipairs(Language.Files) do
+		if langName ~= Language.Files[1] then
+			local Untranslated = {}
+			for refID, transString in pairs(fullLanguage) do
+				if not Language.Loaded[langName][refID] then
+					Language.Loaded[langName][refID] = transString
+					Untranslated[#Untranslated+1] = refID
+				end
+			end
+			Language.Loaded[langName]["DGSI_Untranslated"] = Untranslated
+		end
+	end
 end
 
 function setCurrentLanguage(lang)

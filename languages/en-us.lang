@@ -8,6 +8,7 @@ Plugins				=	"Plugins";
 DGSButton			=	"Button";
 DGSCheckBox			=	"Check Box";
 DGSComboBox			=	"Combo Box";
+DGSEdit				=	"Edit";
 DGSGridList			=	"Grid List";
 DGSImage			=	"Image";
 DGSLabel			=	"Label";
