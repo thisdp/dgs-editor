@@ -52,6 +52,11 @@ function dgsEditorCreateMainPanel()
 	dgsEditor.Created = true
 	dgsEditor.BackGround = dgsImage(0,0,1,1,_,true,tocolor(0,0,0,100))	--Main Background
 	dgsEditor.Canvas = dgsEditor.BackGround:dgsScalePane(0.2,0.2,0.6,0.6,true,sW,sH)	--Main Canvas
+		:on("dgsDrop",function(data)
+			local cursorX,cursorY = dgsRootInstance:getCursorPosition(source)
+			print(cursorX,cursorY)
+			dgsEditorCreateElement(data)
+		end)
 	dgsEditor.Canvas.bgColor = tocolor(0,0,0,128)
 	dgsEditor.WidgetMain = dgsWindow(0,0,250,0.5*sH,{"DGSWidgets"},false)	--Widgets Window
 		:setCloseButtonEnabled(false)
@@ -103,8 +108,16 @@ function dgsEditorCreateMainPanel()
 		end)
 		:on("dgsGridListItemDoubleClick",function(button,state,row)
 			if button == "left" and state == "down" then
-				local widgetID = dgsEditor.WidgetList:getItemData(row,1)
+				local widgetID = source:getItemData(row,1)
 				dgsEditorCreateElement(DGSTypeReference[widgetID][1])
+			end
+		end)
+		:on("dgsDrag",function()
+			local selectedItem = source:getSelectedItem()
+			if selectedItem ~= -1 then
+				local widgetID = source:getItemData(selectedItem,1)
+				local widgetIcon = source:getItemImage(selectedItem,1)
+				source:sendDragNDropData(DGSTypeReference[widgetID][1],widgetIcon)
 			end
 		end)
 	
