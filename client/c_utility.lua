@@ -73,6 +73,12 @@ function fromcolor(int,useMath,relative)
 	end
 	return r,g,b,a
 end
+------------------Color Utility
+colors = {
+	hlightN = tocolor(255,255,255,200),
+	hlightH = tocolor(100,160,228,200),
+	hlightC = tocolor(3,114,239,200),
+}
 
 ------------------Table
 --t1<--t2
