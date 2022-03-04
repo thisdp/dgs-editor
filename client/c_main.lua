@@ -326,6 +326,7 @@ local ctrlSize = 10
 function dgsEditorCreateController(theCanvas)	--Create the controller
 	local RightCenter,RightTop,CenterTop,LeftTop,LeftCenter,LeftBottom,CenterBottom,RightBottom	--Define the 8 controlling circles
 	local Ring = dgsCreateCircle(0.45,0.3,360)	--circles
+	dgsCircleSetColorOverwritten(Ring,false)
 	local Line = theCanvas:dgsLine(0,0,0,0,false,2,tocolor(255,0,0,255))	--the highlight line (controller)
 		:setProperty("childOutsideHit",true)
 		:setProperty("isController",true)
@@ -353,7 +354,9 @@ function dgsEditorCreateController(theCanvas)	--Create the controller
 	Line:addItem(1,1,0,1,_,_,true)
 	Line:addItem(0,1,0,0,_,_,true)
 	--8 circles controller creating and resizing function
-	local RightCenter = Line:dgsImage(-ctrlSize/2,0,ctrlSize,ctrlSize,Ring,false)
+	local RightCenter = Line:dgsButton(-ctrlSize/2,0,ctrlSize,ctrlSize,"",false)
+		:setProperty("image",{Ring,Ring,Ring})
+		:setProperty("color",{colors.hlightN,colors.hlightH,colors.hlightC})
 		:setPositionAlignment("right","center")
 		:on("dgsMouseClickDown",function(button,state,mx,my)
 			source.parent.startDGSPos = Vector2(source.parent:getPosition(false))
@@ -368,7 +371,9 @@ function dgsEditorCreateController(theCanvas)	--Create the controller
 				source.parent.size = Vector2(-source.parent.startMousePos.x+mPos.x+source.parent.startDGSSize.x,source.parent.startDGSSize.y)
 			end
 		end)
-	local CenterTop = Line:dgsImage(0,-ctrlSize/2,ctrlSize,ctrlSize,Ring,false)
+	local CenterTop = Line:dgsButton(0,-ctrlSize/2,ctrlSize,ctrlSize,"",false)
+		:setProperty("image",{Ring,Ring,Ring})
+		:setProperty("color",{colors.hlightN,colors.hlightH,colors.hlightC})
 		:setPositionAlignment("center","top")
 		:on("dgsMouseClickDown",function(button,state,mx,my)
 			source.parent.startDGSPos = Vector2(source.parent:getPosition(false))
@@ -384,7 +389,9 @@ function dgsEditorCreateController(theCanvas)	--Create the controller
 				source.parent.size = Vector2(source.parent.startDGSSize.x,source.parent.startMousePos.y-mPos.y+source.parent.startDGSSize.y)
 			end
 		end)
-	local LeftTop = Line:dgsImage(-ctrlSize/2,-ctrlSize/2,ctrlSize,ctrlSize,Ring,false)
+	local LeftTop = Line:dgsButton(-ctrlSize/2,-ctrlSize/2,ctrlSize,ctrlSize,"",false)
+		:setProperty("image",{Ring,Ring,Ring})
+		:setProperty("color",{colors.hlightN,colors.hlightH,colors.hlightC})
 		:setPositionAlignment("left","top")
 		:on("dgsMouseClickDown",function(button,state,mx,my)
 			source.parent.startDGSPos = Vector2(source.parent:getPosition(false))
@@ -400,7 +407,9 @@ function dgsEditorCreateController(theCanvas)	--Create the controller
 				source.parent.size = (source.parent.startMousePos-mPos+source.parent.startDGSSize)
 			end
 		end)
-	local LeftCenter = Line:dgsImage(-ctrlSize/2,0,ctrlSize,ctrlSize,Ring,false)
+	local LeftCenter = Line:dgsButton(-ctrlSize/2,0,ctrlSize,ctrlSize,"",false)
+		:setProperty("image",{Ring,Ring,Ring})
+		:setProperty("color",{colors.hlightN,colors.hlightH,colors.hlightC})
 		:setPositionAlignment("left","center")
 		:on("dgsMouseClickDown",function(button,state,mx,my)
 			source.parent.startDGSPos = Vector2(source.parent:getPosition(false))
@@ -416,7 +425,9 @@ function dgsEditorCreateController(theCanvas)	--Create the controller
 				source.parent.size = Vector2(source.parent.startMousePos.x-mPos.x+source.parent.startDGSSize.x,source.parent.startDGSSize.y)
 			end
 		end)
-	local LeftBottom = Line:dgsImage(-ctrlSize/2,-ctrlSize/2,ctrlSize,ctrlSize,Ring,false)
+	local LeftBottom = Line:dgsButton(-ctrlSize/2,-ctrlSize/2,ctrlSize,ctrlSize,"",false)
+		:setProperty("image",{Ring,Ring,Ring})
+		:setProperty("color",{colors.hlightN,colors.hlightH,colors.hlightC})
 		:setPositionAlignment("left","bottom")
 		:on("dgsMouseClickDown",function(button,state,mx,my)
 			source.parent.startDGSPos = Vector2(source.parent:getPosition(false))
@@ -432,7 +443,9 @@ function dgsEditorCreateController(theCanvas)	--Create the controller
 				source.parent.size = ((source.parent.startMousePos-mPos)*Vector2(1,-1)+source.parent.startDGSSize)
 			end
 		end)
-	local CenterBottom = Line:dgsImage(0,-ctrlSize/2,ctrlSize,ctrlSize,Ring,false)
+	local CenterBottom = Line:dgsButton(0,-ctrlSize/2,ctrlSize,ctrlSize,"",false)
+		:setProperty("image",{Ring,Ring,Ring})
+		:setProperty("color",{colors.hlightN,colors.hlightH,colors.hlightC})
 		:setPositionAlignment("center","bottom")
 		:on("dgsMouseClickDown",function(button,state,mx,my)
 			source.parent.startDGSPos = Vector2(source.parent:getPosition(false))
@@ -446,7 +459,9 @@ function dgsEditorCreateController(theCanvas)	--Create the controller
 				source.parent.size = Vector2(source.parent.startDGSSize.x,-source.parent.startMousePos.y+mPos.y+source.parent.startDGSSize.y)
 			end
 		end)
-	local RightBottom = Line:dgsImage(-ctrlSize/2,-ctrlSize/2,ctrlSize,ctrlSize,Ring,false)
+	local RightBottom = Line:dgsButton(-ctrlSize/2,-ctrlSize/2,ctrlSize,ctrlSize,"",false)
+		:setProperty("image",{Ring,Ring,Ring})
+		:setProperty("color",{colors.hlightN,colors.hlightH,colors.hlightC})
 		:setPositionAlignment("right","bottom")
 		:on("dgsMouseClickDown",function(button,state,mx,my)
 			source.parent.startDGSPos = Vector2(source.parent:getPosition(false))
@@ -461,7 +476,9 @@ function dgsEditorCreateController(theCanvas)	--Create the controller
 				source.parent.size = ((source.parent.startMousePos-mPos)*Vector2(-1,-1)+source.parent.startDGSSize)
 			end
 		end)
-	local RightTop = Line:dgsImage(-ctrlSize/2,-ctrlSize/2,ctrlSize,ctrlSize,Ring,false)
+	local RightTop = Line:dgsButton(-ctrlSize/2,-ctrlSize/2,ctrlSize,ctrlSize,"",false)
+		:setProperty("image",{Ring,Ring,Ring})
+		:setProperty("color",{colors.hlightN,colors.hlightH,colors.hlightC})
 		:setPositionAlignment("right","top")
 		:on("dgsMouseClickDown",function(button,state,mx,my)
 			source.parent.startDGSPos = Vector2(source.parent:getPosition(false))
@@ -763,6 +780,58 @@ function DGSEditorDestroyElement()
 		dgsGetInstance(dgsEditor.Controller.BoundChild):destroy()
 		dgsEditor.ElementList[dgsEditor.Controller.BoundChild] = nil
 		dgsEditor.Controller.BoundChild = nil
+	end
+end
+
+----------------Hot Key Controller
+KeyHolder = {}
+function onClientKeyCheckInRender()
+	if KeyHolder.repeatKey then
+		local tick = getTickCount()
+		if tick-KeyHolder.repeatStartTick >= KeyHolder.repeatDuration then
+			KeyHolder.repeatStartTick = tick
+			if getKeyState(KeyHolder.lastKey) then
+				onClientKeyTriggered(KeyHolder.lastKey)
+			else
+				KeyHolder = {}
+			end
+		end
+	end
+end
+addEventHandler("onClientRender",root,onClientKeyCheckInRender)
+
+function onClientKeyCheck(button,state)
+	if state and button:sub(1,5) ~= "mouse" then
+		if isTimer(KeyHolder.Timer) then killTimer(KeyHolder.Timer) end
+		KeyHolder = {}
+		KeyHolder.lastKey = button
+		KeyHolder.Timer = setTimer(function()
+			if not getKeyState(KeyHolder.lastKey) then
+				KeyHolder = {}
+				return
+			end
+			KeyHolder.repeatKey = true
+			KeyHolder.repeatStartTick = getTickCount()
+			KeyHolder.repeatDuration = 25
+		end,400,1)
+		if onClientKeyTriggered(button) then
+			cancelEvent()
+		end
+	end
+end
+addEventHandler("onClientKey",root,onClientKeyCheck)
+
+function onClientKeyTriggered(button)
+	if dgsEditor.Controller and dgsEditor.Controller.visible then
+		if button == "arrow_u" then
+			dgsEditor.Controller.position = dgsEditor.Controller.position.toVector+Vector2(0,-1)
+		elseif button == "arrow_d" then
+			dgsEditor.Controller.position = dgsEditor.Controller.position.toVector+Vector2(0,1)
+		elseif button == "arrow_l" then
+			dgsEditor.Controller.position = dgsEditor.Controller.position.toVector+Vector2(-1,0)
+		elseif button == "arrow_r" then
+			dgsEditor.Controller.position = dgsEditor.Controller.position.toVector+Vector2(0,1)
+		end
 	end
 end
 -----------------------------------------------------Start up
