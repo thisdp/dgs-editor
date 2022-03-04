@@ -725,7 +725,7 @@ function dgsEditorPropertiesMenuAttach(targetElement)
 	dgsEditor.WidgetPropertiesMenu:on("dgsGridListItemDoubleClick",function(btn,state,item)
 		if state ~= "down" then return end
 		if item ~= row then return end
-		DGSEditorDestroyElement()
+		dgsEditorDestroyElement()
 	end)
 end
 
@@ -800,7 +800,7 @@ function dgsEditorCreateEditProperty(property)
 end
 
 -- destroy element
-function DGSEditorDestroyElement()
+function dgsEditorDestroyElement()
 	dgsEditorControllerDetach()
 	dgsEditor.Controller.visible = false
 	if dgsEditor.Controller.BoundChild then
@@ -858,6 +858,8 @@ function onClientKeyTriggered(button)
 			dgsEditor.Controller.position = dgsEditor.Controller.position.toVector+Vector2(-1,0)
 		elseif button == "arrow_r" then
 			dgsEditor.Controller.position = dgsEditor.Controller.position.toVector+Vector2(1,0)
+		elseif button == "delete" then
+			dgsEditorDestroyElement()
 		end
 	end
 end
