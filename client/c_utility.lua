@@ -74,7 +74,7 @@ function fromcolor(int,useMath,relative)
 	return r,g,b,a
 end
 ------------------Color Utility
-colors = {
+predefColors = {
 	hlightN = tocolor(255,255,255,200),
 	hlightH = tocolor(100,160,228,200),
 	hlightC = tocolor(3,114,239,200),

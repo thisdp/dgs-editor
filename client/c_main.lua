@@ -13,16 +13,19 @@ dgsEditor = {}
 
 ------------------------------------------------------State Switch
 function dgsEditorSwitchState(state)
-	if state == "enabled" then			--If someone want to enable dgs editor
-		if dgsEditorContext.state == "available" then	--First, need to be "available"
-			dgsEditor.state = "enabled"					--Enabled
+	--If someone want to enable dgs editor
+	if state == "enabled" then
+		if dgsEditorContext.state == "available" then --First, state need to be "available"
+			dgsEditor.state = "enabled"	--Enabled
 			dgsEditorMakeOutput(translateText({"EditorEnabled"}))
 			triggerEvent("onClientDGSEditorStateChanged",resourceRoot,dgsEditor.state)
 			if not dgsEditor.Created then
 				loadstring(exports[dgsEditorContext.dgsResourceName]:dgsImportOOPClass())()
 				dgsRootInstance:setElementKeeperEnabled(true)
-				dgsRootInstance:setTranslationTable("DGSEditorLanguage",Language.UsingLanguageTable)	--Set translation dictionary whenever a new language applies
-				dgsRootInstance:setAttachTranslation("DGSEditorLanguage")	--Use this dictionary
+				--Set translation dictionary whenever a new language applies
+				dgsRootInstance:setTranslationTable("DGSEditorLanguage",Language.UsingLanguageTable)
+				--Use this dictionary
+				dgsRootInstance:setAttachTranslation("DGSEditorLanguage")
 				dgsEditorCreateMainPanel()
 			else
 				dgsEditor.BackGround.visible = true
@@ -30,7 +33,8 @@ function dgsEditorSwitchState(state)
 			showCursor(true)
 		end
 	elseif state == "disabled" then		--If someone want to disable dgs editor
-		dgsEditor.state = "disabled"	--Just disable
+		--Just disable
+		dgsEditor.state = "disabled"
 		dgsEditorMakeOutput(translateText({"EditorDisabled"}))
 		dgsEditor.BackGround.visible = false
 		showCursor(false)
@@ -48,17 +52,21 @@ end)
 
 ------------------------------------------------------Main Panel
 function dgsEditorCreateMainPanel()
-	dgsEditor.ElementList = {}	--Used to store created elements createed by user
+	--Used to store created elements createed by user
+	dgsEditor.ElementList = {}
 	dgsEditor.Created = true
-	dgsEditor.BackGround = dgsImage(0,0,1,1,_,true,tocolor(0,0,0,100))	--Main Background
-	dgsEditor.Canvas = dgsEditor.BackGround:dgsScalePane(0.2,0.2,0.6,0.6,true,sW,sH)	--Main Canvas
+	--Main Background
+	dgsEditor.BackGround = dgsImage(0,0,1,1,_,true,tocolor(0,0,0,100))
+	--Main Canvas
+	dgsEditor.Canvas = dgsEditor.BackGround:dgsScalePane(0.2,0.2,0.6,0.6,true,sW,sH)
 		:on("dgsDrop",function(data)
 			local cursorX,cursorY = dgsRootInstance:getCursorPosition(source)
 			print(cursorX,cursorY)
 			dgsEditorCreateElement(data)
 		end)
 	dgsEditor.Canvas.bgColor = tocolor(0,0,0,128)
-	dgsEditor.WidgetMain = dgsWindow(0,0,250,0.5*sH,{"DGSWidgets"},false)	--Widgets Window
+	--Widgets Window
+	dgsEditor.WidgetMain = dgsWindow(0,0,250,0.5*sH,{"DGSWidgets"},false)
 		:setCloseButtonEnabled(false)
 		:setSizable(false)
 		:setMovable(false)
@@ -68,11 +76,11 @@ function dgsEditorCreateMainPanel()
 		:setProperty("color",tocolor(0,0,0,128))
 		:setProperty("titleColor",tocolor(0,0,0,128))
 		:setProperty("textSize",{1.3,1.3})
-	
-	dgsEditor.WidgetSpliter = dgsEditor.WidgetMain	--The Vertical Spliter Line
+	--The Vertical Spliter Line
+	dgsEditor.WidgetSpliter = dgsEditor.WidgetMain
 		:dgsImage(80,0,5,0.5*sH-25,_,false,tocolor(50,50,50,200))
-		
-	dgsEditor.WidgetTypeList = dgsEditor.WidgetMain	--Type List
+	--Type List
+	dgsEditor.WidgetTypeList = dgsEditor.WidgetMain
 		:dgsGridList(0,0,80,200,false)
 		:setProperty("rowHeight",25)
 		:setProperty("columnHeight",0)
@@ -91,8 +99,8 @@ function dgsEditorCreateMainPanel()
 	dgsEditor.WidgetTypeList:addColumn("",0.9)
 	dgsEditor.WidgetTypeList:addRow(_,{"Basic"})
 	dgsEditor.WidgetTypeList:addRow(_,{"Plugins"})
-	
-	dgsEditor.WidgetList = dgsEditor.WidgetMain	--Widget List
+	--Widget List
+	dgsEditor.WidgetList = dgsEditor.WidgetMain
 		:dgsGridList(85,0,165,0.5*sH-25,false)
 		:setProperty("rowHeight",30)
 		:setProperty("columnHeight",0)
@@ -277,23 +285,32 @@ function dgsEditorCreateElement(dgsType,...)
 		createdElement = dgsEditor.Canvas:dgsTabPanel(0,0,100,100,false)
 	end
 	createdElement.isCreatedByEditor = true
-	createdElement:on("dgsMouseClickDown",function()	--When clicking the element
+	--When clicking the element
+	createdElement:on("dgsMouseClickDown",function()
 		dgsEditorControllerDetach()
 		--When clicked the element, turn it into "operating element"
 		dgsEditor.Controller.visible = true	--Make the controller visible
 		dgsEditorControllerAttach(source)
 	end)
-	dgsEditor.ElementList[dgsGetInstance(createdElement)] = source	--Record the element
+	--Record the element
+	dgsEditor.ElementList[dgsGetInstance(createdElement)] = source
 end
 
 function dgsEditorControllerAttach(targetElement)
-	local pos,size = targetElement.position,targetElement.size	--Save position/size
-	dgsEditor.Controller.BoundParent = targetElement:getParent().dgsElement	--Record the parent element of operating element
-	dgsEditor.Controller.BoundChild = targetElement.dgsElement	--Record the operating element as the child element of controller (to proxy the positioning and resizing of operating element with controller)
-	dgsEditor.Controller:setParent(targetElement:getParent())	--Set the parent element
-	targetElement:setParent(dgsEditor.Controller)	--Set the child element
-	dgsEditor.Controller.position = pos	--Use operating element's position
-	dgsEditor.Controller.size = size	--Use operating element's size
+	--Save position/size
+	local pos,size = targetElement.position,targetElement.size
+	--Record the parent element of operating element
+	dgsEditor.Controller.BoundParent = targetElement:getParent().dgsElement
+	--Record the operating element as the child element of controller (to proxy the positioning and resizing of operating element with controller)
+	dgsEditor.Controller.BoundChild = targetElement.dgsElement
+	--Set the parent element
+	dgsEditor.Controller:setParent(targetElement:getParent())
+	--Set the child element
+	targetElement:setParent(dgsEditor.Controller)
+	--Use operating element's position
+	dgsEditor.Controller.position = pos
+	--Use operating element's size
+	dgsEditor.Controller.size = size
 	--Make operating element fullscreen to the controller
 	targetElement.position.relative = true
 	targetElement.position.x = 0
@@ -309,9 +326,12 @@ function dgsEditorControllerAttach(targetElement)
 end
 
 function dgsEditorControllerDetach()
-	local p = dgsGetInstance(dgsEditor.Controller.BoundParent)	--Get the instance of parent (controller's & operating element's)
-	if dgsEditor.Controller.BoundChild then	--If the operating element exists
-		local c = dgsGetInstance(dgsEditor.Controller.BoundChild)	--Get the instance of child (controller's) [the operating element]
+	--Get the instance of parent (controller's & operating element's)
+	local p = dgsGetInstance(dgsEditor.Controller.BoundParent)
+	--If the operating element exists
+	if dgsEditor.Controller.BoundChild then
+		--Get the instance of child (controller's) [the operating element]
+		local c = dgsGetInstance(dgsEditor.Controller.BoundChild)
 		--Use the position/size/parent of the controller
 		c:setParent(p)
 		c.position.relative = dgsEditor.Controller.position.relative
@@ -323,24 +343,31 @@ function dgsEditorControllerDetach()
 end
 
 local ctrlSize = 10
-function dgsEditorCreateController(theCanvas)	--Create the controller
-	local RightCenter,RightTop,CenterTop,LeftTop,LeftCenter,LeftBottom,CenterBottom,RightBottom	--Define the 8 controlling circles
+--Controller Create Function  
+function dgsEditorCreateController(theCanvas)
+	--Declear the 8 controlling circles
+	local RightCenter,RightTop,CenterTop,LeftTop,LeftCenter,LeftBottom,CenterBottom,RightBottom	
 	local Ring = dgsCreateCircle(0.45,0.3,360)	--circles
 	dgsCircleSetColorOverwritten(Ring,false)
 	local Line = theCanvas:dgsLine(0,0,0,0,false,2,tocolor(255,0,0,255))	--the highlight line (controller)
 		:setProperty("childOutsideHit",true)
 		:setProperty("isController",true)
-	addEventHandler("onDgsMouseClickDown",root,function(button,state,mx,my)	--When clicking the element
-		if dgsGetInstance(source) == dgsGetInstance(dgsEditor.Controller.BoundChild) then	--check whether the clicked element is handled by the controller
+	--When clicking the element
+	addEventHandler("onDgsMouseClickDown",root,function(button,state,mx,my)
+		--Check whether the clicked element is handled by the controller
+		if dgsGetInstance(source) == dgsGetInstance(dgsEditor.Controller.BoundChild) then
 			--Save the position, size and mouse position
 			dgsEditor.Controller.startDGSPos = Vector2(dgsEditor.Controller:getPosition(false))
 			dgsEditor.Controller.startDGSSize = Vector2(dgsEditor.Controller:getSize(false))
 			dgsEditor.Controller.startMousePos = Vector2(mx,my)
 		end
 	end)
-	addEventHandler("onDgsMouseDrag",root,function(mx,my)	--When attempt to moving the element
-		if dgsGetInstance(source) == dgsGetInstance(dgsEditor.Controller.BoundChild) then	--check whether the clicked element is handled by the controller
-			if dgsEditor.Controller.startMousePos then	--Is the element is able to move?
+	--When attempt to moving the element
+	addEventHandler("onDgsMouseDrag",root,function(mx,my)
+		--Check whether the clicked element is handled by the controller
+		if dgsGetInstance(source) == dgsGetInstance(dgsEditor.Controller.BoundChild) then
+			--Is the element is able to move?
+			if dgsEditor.Controller.startMousePos then
 				--Move
 				local pRlt = dgsEditor.Controller.position.rlt
 				local mPos = Vector2(mx,my)
@@ -356,7 +383,7 @@ function dgsEditorCreateController(theCanvas)	--Create the controller
 	--8 circles controller creating and resizing function
 	local RightCenter = Line:dgsButton(-ctrlSize/2,0,ctrlSize,ctrlSize,"",false)
 		:setProperty("image",{Ring,Ring,Ring})
-		:setProperty("color",{colors.hlightN,colors.hlightH,colors.hlightC})
+		:setProperty("color",{predefColors.hlightN,predefColors.hlightH,predefColors.hlightC})
 		:setPositionAlignment("right","center")
 		:on("dgsMouseClickDown",function(button,state,mx,my)
 			source.parent.startDGSPos = Vector2(source.parent:getPosition(false))
@@ -373,7 +400,7 @@ function dgsEditorCreateController(theCanvas)	--Create the controller
 		end)
 	local CenterTop = Line:dgsButton(0,-ctrlSize/2,ctrlSize,ctrlSize,"",false)
 		:setProperty("image",{Ring,Ring,Ring})
-		:setProperty("color",{colors.hlightN,colors.hlightH,colors.hlightC})
+		:setProperty("color",{predefColors.hlightN,predefColors.hlightH,predefColors.hlightC})
 		:setPositionAlignment("center","top")
 		:on("dgsMouseClickDown",function(button,state,mx,my)
 			source.parent.startDGSPos = Vector2(source.parent:getPosition(false))
@@ -391,7 +418,7 @@ function dgsEditorCreateController(theCanvas)	--Create the controller
 		end)
 	local LeftTop = Line:dgsButton(-ctrlSize/2,-ctrlSize/2,ctrlSize,ctrlSize,"",false)
 		:setProperty("image",{Ring,Ring,Ring})
-		:setProperty("color",{colors.hlightN,colors.hlightH,colors.hlightC})
+		:setProperty("color",{predefColors.hlightN,predefColors.hlightH,predefColors.hlightC})
 		:setPositionAlignment("left","top")
 		:on("dgsMouseClickDown",function(button,state,mx,my)
 			source.parent.startDGSPos = Vector2(source.parent:getPosition(false))
@@ -409,7 +436,7 @@ function dgsEditorCreateController(theCanvas)	--Create the controller
 		end)
 	local LeftCenter = Line:dgsButton(-ctrlSize/2,0,ctrlSize,ctrlSize,"",false)
 		:setProperty("image",{Ring,Ring,Ring})
-		:setProperty("color",{colors.hlightN,colors.hlightH,colors.hlightC})
+		:setProperty("color",{predefColors.hlightN,predefColors.hlightH,predefColors.hlightC})
 		:setPositionAlignment("left","center")
 		:on("dgsMouseClickDown",function(button,state,mx,my)
 			source.parent.startDGSPos = Vector2(source.parent:getPosition(false))
@@ -427,7 +454,7 @@ function dgsEditorCreateController(theCanvas)	--Create the controller
 		end)
 	local LeftBottom = Line:dgsButton(-ctrlSize/2,-ctrlSize/2,ctrlSize,ctrlSize,"",false)
 		:setProperty("image",{Ring,Ring,Ring})
-		:setProperty("color",{colors.hlightN,colors.hlightH,colors.hlightC})
+		:setProperty("color",{predefColors.hlightN,predefColors.hlightH,predefColors.hlightC})
 		:setPositionAlignment("left","bottom")
 		:on("dgsMouseClickDown",function(button,state,mx,my)
 			source.parent.startDGSPos = Vector2(source.parent:getPosition(false))
@@ -445,7 +472,7 @@ function dgsEditorCreateController(theCanvas)	--Create the controller
 		end)
 	local CenterBottom = Line:dgsButton(0,-ctrlSize/2,ctrlSize,ctrlSize,"",false)
 		:setProperty("image",{Ring,Ring,Ring})
-		:setProperty("color",{colors.hlightN,colors.hlightH,colors.hlightC})
+		:setProperty("color",{predefColors.hlightN,predefColors.hlightH,predefColors.hlightC})
 		:setPositionAlignment("center","bottom")
 		:on("dgsMouseClickDown",function(button,state,mx,my)
 			source.parent.startDGSPos = Vector2(source.parent:getPosition(false))
@@ -461,7 +488,7 @@ function dgsEditorCreateController(theCanvas)	--Create the controller
 		end)
 	local RightBottom = Line:dgsButton(-ctrlSize/2,-ctrlSize/2,ctrlSize,ctrlSize,"",false)
 		:setProperty("image",{Ring,Ring,Ring})
-		:setProperty("color",{colors.hlightN,colors.hlightH,colors.hlightC})
+		:setProperty("color",{predefColors.hlightN,predefColors.hlightH,predefColors.hlightC})
 		:setPositionAlignment("right","bottom")
 		:on("dgsMouseClickDown",function(button,state,mx,my)
 			source.parent.startDGSPos = Vector2(source.parent:getPosition(false))
@@ -478,7 +505,7 @@ function dgsEditorCreateController(theCanvas)	--Create the controller
 		end)
 	local RightTop = Line:dgsButton(-ctrlSize/2,-ctrlSize/2,ctrlSize,ctrlSize,"",false)
 		:setProperty("image",{Ring,Ring,Ring})
-		:setProperty("color",{colors.hlightN,colors.hlightH,colors.hlightC})
+		:setProperty("color",{predefColors.hlightN,predefColors.hlightH,predefColors.hlightC})
 		:setPositionAlignment("right","top")
 		:on("dgsMouseClickDown",function(button,state,mx,my)
 			source.parent.startDGSPos = Vector2(source.parent:getPosition(false))
@@ -830,7 +857,7 @@ function onClientKeyTriggered(button)
 		elseif button == "arrow_l" then
 			dgsEditor.Controller.position = dgsEditor.Controller.position.toVector+Vector2(-1,0)
 		elseif button == "arrow_r" then
-			dgsEditor.Controller.position = dgsEditor.Controller.position.toVector+Vector2(0,1)
+			dgsEditor.Controller.position = dgsEditor.Controller.position.toVector+Vector2(1,0)
 		end
 	end
 end
