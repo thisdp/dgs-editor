@@ -1,0 +1,34 @@
+--The syntax of this file is Lua Table.
+Language			=	"ru";		    --language abbreviate
+LanguageDetail		=	"Russian";  	--language full name
+DGSWidgets			=	"DGS Виджеты";
+DGSPropertyList		=	"DGS Список свойств";
+Basic				=	"Базовые";
+Plugins				=	"Плагины";
+DGSButton			=	"Кнопка";
+DGSCheckBox			=	"Флажок";
+DGSComboBox			=	"Спискок";
+DGSEdit				=	"Редактируемое поле";
+DGSGridList			=	"Таблица";
+DGSImage			=	"Изображение";
+DGSLabel			=	"Текстовая метка";
+DGSMemo				=	"Памятка";
+DGSProgressBar		=	"Индикатор";
+DGSRadioButton		=	"Переключатель";
+DGSScrollBar		=	"Полоса прокрутки";
+DGSScrollPane		=	"Панель прокрутки";
+DGSSelector			=	"Селектор";
+DGSSwitchButton		=	"Кнопка переключения";
+DGSTabPanel			=	"Панель вкладок";
+DGSWindow			=	"Окно";
+
+
+
+--Notifications:
+DGSStop				=	"Ресурс DGS был остановлен!";
+DGSIsNotRun			=	"Не удалось найти запущенный ресурс DGS, пожалуйста, запустите DGS!";
+DGSIsRun			=	"Ресурс DGS обнаружен. Редактор теперь доступен!";
+FailToChgLang		=	"Не удалось изменить язык %rep%";
+ChgLang				=	"Язык изменен на %rep%(%rep%)";
+EditorEnabled		=	"Редактор #00FF00Включен!";
+EditorDisabled		=	"Редактор #FF0000Выключен!";

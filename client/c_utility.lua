@@ -55,6 +55,24 @@ function dgsEditorMakeOutput(text,level,isDebugMessage)
 	end
 end
 
+function fromcolor(int,useMath,relative)
+	local a,r,g,b
+	if useMath then
+		b = int%256
+		local int = (int-b)/256
+		g = int%256
+		local int = (int-g)/256
+		r = int%256
+		local int = (int-r)/256
+		a = int%256
+	else
+		a,r,g,b = getColorFromString(format("#%.8x",int))
+	end
+	if relative then
+		a,r,g,b = a/255,r/255,g/255,b/255
+	end
+	return r,g,b,a
+end
 
 ------------------Table
 --t1<--t2
@@ -119,4 +137,32 @@ DGSTypeReference = {
 	{"dgs-dxswitchbutton","DGSSwitchButton"},
 	{"dgs-dxtabpanel","DGSTabPanel"},
 	{"dgs-dxwindow","DGSWindow"},
+}
+
+DGSPropertiesList = {
+	["dgs-dxbutton"] = {"alignment","color","colorCoded","text","textColor","textSize","font","shadow","wordBreak"},
+	["dgs-dxcheckbox"] = {},
+	["dgs-dxcombobox"] = {},
+	["dgs-dxgridlist"] = {},
+	["dgs-dximage"] = {},
+	["dgs-dxlabel"] = {},
+	["dgs-dxmemo"] = {},
+	["dgs-dxedit"] = {},
+	["dgs-dxprogressbar"] = {},
+	["dgs-dxradiobutton"] = {},
+	["dgs-dxscrollbar"] = {},
+	["dgs-dxscrollpane"] = {},
+	["dgs-dxselector"] = {},
+	["dgs-dxswitchbutton"] = {},
+	["dgs-dxtabpanel"] = {},
+	["dgs-dxwindow"] = {},
+}
+
+fonts = {"default","default-bold","clear","arial","sans","pricedown","bankgothic","diploma","beckett"}
+
+colors = {"normalColor","hoveringColor","clickedColor"}
+
+alignments = {
+	{"left","center","right"},
+	{"top","center","bottom"},
 }

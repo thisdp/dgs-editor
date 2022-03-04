@@ -3,7 +3,8 @@ Language = {
 		"en-us",
 		"zh-cn",
 		"ar",
-		"pt-br"
+		"pt-br",
+		"ru"
 	},
 	Loaded = {},
 	UsingLanguageTable = false,
