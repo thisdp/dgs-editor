@@ -541,15 +541,13 @@ end
 
 function dgsEditorPropertiesMenuAttach(targetElement)
 	for i, property in pairs(DGSPropertiesList[targetElement:getType()]) do
-		local row = dgsEditor.WidgetPropertiesMenu:getRowCount()+1
-		dgsEditor.WidgetPropertiesMenu:addRow(row,"",property)
+		local row = dgsEditor.WidgetPropertiesMenu:addRow(row,"",property)
 		dgsEditor.WidgetPropertiesMenu:setItemData(i,1,property)
 		if property == "alignment" then
 			dgsEditor.WidgetPropertiesMenu:setRowAsSection(row,true)
 			local text = {"alignX","alignY"}
 			for a, align in pairs(dgsGetInstance(dgsEditor.Controller.BoundChild):getProperty(property)) do
-				local rowSection = dgsEditor.WidgetPropertiesMenu:getRowCount()+1
-				dgsEditor.WidgetPropertiesMenu:addRow(rowSection,"",text[a])
+				local rowSection = dgsEditor.WidgetPropertiesMenu:addRow(rowSection,"",text[a])
 				local combobox = dgsEditor.WidgetPropertiesMenu
 					:dgsComboBox(0,0,150,20,false)
 					:attachToGridList(dgsEditor.WidgetPropertiesMenu.dgsElement,rowSection,3)
@@ -571,8 +569,7 @@ function dgsEditorPropertiesMenuAttach(targetElement)
 			dgsEditor.WidgetPropertiesMenu:setRowAsSection(row,true)
 			colorEdit = {}
 			for c, color in pairs(dgsGetInstance(dgsEditor.Controller.BoundChild):getProperty(property)) do
-				local rowSection = dgsEditor.WidgetPropertiesMenu:getRowCount()+1
-				dgsEditor.WidgetPropertiesMenu:addRow(rowSection,"",colors[c])
+				local rowSection = dgsEditor.WidgetPropertiesMenu:addRow(rowSection,"",colors[c])
 				local color = {fromcolor(color,true)}
 				local bind = {"R","G","B","A"}
 				colorEdit[rowSection] = {}
@@ -642,13 +639,10 @@ function dgsEditorPropertiesMenuAttach(targetElement)
 		elseif property == "text" then
 			local edit = dgsEditor.WidgetPropertiesMenu
 				:dgsEdit(0,0,150,20,false)
-				:setPlaceHolder(dgsGetInstance(dgsEditor.Controller.BoundChild):getProperty(property))
+				:setText(dgsGetInstance(dgsEditor.Controller.BoundChild):getProperty(property))
 				:attachToGridList(dgsEditor.WidgetPropertiesMenu.dgsElement,row,3)
 				:on("dgsEditAccepted",function()
 					dgsGetInstance(dgsEditor.Controller.BoundChild):setProperty(property, source:getText())
-					source:setText("")
-					source:setPlaceHolder(source:getText())
-					source:blur()
 				end)
 			edit:setPosition(0,5,false)
 		elseif property == "textColor" then
@@ -703,6 +697,21 @@ function dgsEditorPropertiesMenuAttach(targetElement)
 					dgsEditor.ColorPicker:setColor(r,g,b,a,"RGB")
 				end)
 			button:setPosition(140,5,false)
+		elseif property == "textSize" then
+			dgsEditor.WidgetPropertiesMenu:setRowAsSection(row,true)
+			local text = {"scaleX","scaleY"}
+			local edit = {}
+			for i, scale in pairs(dgsGetInstance(dgsEditor.Controller.BoundChild):getProperty(property)) do
+				local rowSection = dgsEditor.WidgetPropertiesMenu:addRow(rowSection,"",text[i])
+				edit[i] = dgsEditor.WidgetPropertiesMenu
+					:dgsEdit(0,0,50,20,false)
+					:setText(scale)
+					:attachToGridList(dgsEditor.WidgetPropertiesMenu.dgsElement,rowSection,3)
+					:on("dgsEditAccepted",function()
+						dgsGetInstance(dgsEditor.Controller.BoundChild):setProperty(property, {tonumber(edit[1]:getText()),tonumber(edit[2]:getText())})
+					end)
+				edit[i]:setPosition(0,5,false)
+			end
 		elseif property == "font" then
 			local combobox = dgsEditor.WidgetPropertiesMenu
 				:dgsComboBox(0,0,150,20,false)
@@ -717,10 +726,22 @@ function dgsEditorPropertiesMenuAttach(targetElement)
 				dgsGetInstance(dgsEditor.Controller.BoundChild):setProperty("font", combobox:getItemText(row))
 			end)
 			combobox:setPosition(0,5,false)
+		elseif property == "shadow" then
+			--dgsEditor.WidgetPropertiesMenu:setRowAsSection(row,true)
+			--for e, value in pairs(dgsGetInstance(dgsEditor.Controller.BoundChild):getProperty(property)) do
+
+			--end
+		elseif property == "wordBreak" then
+			local switch = dgsEditor.WidgetPropertiesMenu
+				:dgsSwitchButton(0,0,50,20,"","",dgsGetInstance(dgsEditor.Controller.BoundChild):getProperty(property))
+				:attachToGridList(dgsEditor.WidgetPropertiesMenu.dgsElement,row,3)
+				:on("dgsMouseClickDown",function()
+					dgsGetInstance(dgsEditor.Controller.BoundChild):setProperty(property, not source:getState())
+				end)
+			switch:setPosition(0,5,false)
 		end
 	end
-	local row = dgsEditor.WidgetPropertiesMenu:getRowCount()+1
-	dgsEditor.WidgetPropertiesMenu:addRow(row,"","destroy")
+	local row = dgsEditor.WidgetPropertiesMenu:addRow(row,"","destroy")
 	dgsEditor.WidgetPropertiesMenu:setItemData(row,1,"destroy")
 	dgsEditor.WidgetPropertiesMenu:on("dgsGridListItemDoubleClick",function(btn,state,item)
 		if state ~= "down" then return end
