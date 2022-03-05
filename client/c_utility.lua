@@ -120,6 +120,23 @@ function table.count(tabl)
 	return cnt
 end
 
+function table.find(tab,ke,num)
+	if num then
+		for k,v in pairs(tab) do
+			if v[num] == ke then
+				return k
+			end
+		end
+	else
+		for k,v in pairs(tab) do
+			if v == ke then
+				return k
+			end
+		end
+	end
+	return false
+end
+
 ------------------Events
 
 addEvent("onClientDGSEditorRequestStateChange",true)	--When DGS editor's state changes (available or disabled)
@@ -161,7 +178,7 @@ DGSPropertiesList = {
 	["dgs-dxselector"] = {},
 	["dgs-dxswitchbutton"] = {},
 	["dgs-dxtabpanel"] = {},
-	["dgs-dxwindow"] = {},
+	["dgs-dxwindow"] = {"alignment","font","text","textSize","textColor"},
 }
 
 fonts = {"default","default-bold","clear","arial","sans","pricedown","bankgothic","diploma","beckett"}
@@ -172,3 +189,5 @@ alignments = {
 	{"left","center","right"},
 	{"top","center","bottom"},
 }
+
+DGSParents = {"dgs-dxgridlist","dgs-dxscrollpane","dgs-dxtabpanel","dgs-dxwindow"}
