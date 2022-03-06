@@ -185,7 +185,7 @@ function dgsEditorCreateMainPanel()
 		:setProperty("textSize",{1.3,1.3})
 		:setParent(dgsEditor.BackGround)
 
-	local titleHeight = dgsEditor.WidgetPropertiesMain:getProperty("titleHeight")
+	local titleHeight = dgsEditor.WidgetPropertiesMain.titleHeight
 
 	--Properties List
 	dgsEditor.WidgetPropertiesMenu = dgsEditor.WidgetPropertiesMain
@@ -197,44 +197,62 @@ function dgsEditorCreateMainPanel()
 		:setProperty("rowTextPosOffset",{10,0})
 
 	--set rows default color
-	local defaultRowColor = dgsEditor.WidgetPropertiesMenu:getProperty("rowColor")[1]
+	local defaultRowColor = dgsEditor.WidgetPropertiesMenu.rowColor[1]
 	dgsEditor.WidgetPropertiesMenu:setProperty("rowColor",{defaultRowColor,defaultRowColor,defaultRowColor})
 
 	dgsEditor.WidgetPropertiesMenu:addColumn("",0.35)	-- property name
 	dgsEditor.WidgetPropertiesMenu:addColumn("",0.65)	-- edit
 
 	--Color Main
-	dgsEditor.WidgetColorMain = dgsWindow(0,0,400,300,{"DGSColorPicker"},false)
+	dgsEditor.WidgetColorMain = dgsWindow(0,0,380,250,{"DGSColorPicker"},false)
 		:setCloseButtonEnabled(false)
 		:setSizable(false)
 		:setMovable(false)
 		:setParent(dgsEditor.BackGround)
 		:setProperty("shadow",{1,1,0xFF000000})
 		:setProperty("titleColorBlur",false)
-		:setProperty("color",tocolor(30,30,30,200))
-		:setProperty("titleColor",tocolor(30,30,30,200))
+		:setProperty("color",tocolor(80,80,80,200))
+		:setProperty("titleColor",tocolor(80,80,80,200))
 		:setProperty("textSize",{1.3,1.3})
 		:setParent(dgsEditor.BackGround)
 
 	--Color Picker
 	dgsEditor.ColorPicker = dgsEditor.WidgetColorMain
 		:dgsColorPicker("HSVRing",10,10,200,200,false)
-	
-	dgsEditor.ColorPicker:dgsComponentSelector(225,10,100,25,true,false)
-		:bindToColorPicker(dgsEditor.ColorPicker, "RGB", "R")
-	dgsEditor.ColorPicker:dgsComponentSelector(225,50,100,25,true,false)
-		:bindToColorPicker(dgsEditor.ColorPicker, "RGB", "G")
-	dgsEditor.ColorPicker:dgsComponentSelector(225,90,100,25,true,false)
-		:bindToColorPicker(dgsEditor.ColorPicker, "RGB", "B")
+	--Red Selector
+	dgsEditor.WidgetColorMain:dgsComponentSelector(260,10,100,25,true,false)
+		:bindToColorPicker(dgsEditor.ColorPicker,"RGB","R")
+	dgsEditor.WidgetColorMain:dgsLabel(230,10,25,25,"Red:",false)
+		:setProperty("alignment",{"right","center"})
+	--Green Selector
+	dgsEditor.WidgetColorMain:dgsComponentSelector(260,50,100,25,true,false)
+		:bindToColorPicker(dgsEditor.ColorPicker,"RGB","G")
+	dgsEditor.WidgetColorMain:dgsLabel(230,50,25,25,"Green:",false)
+		:setProperty("alignment",{"right","center"})
+	--Blue Selector
+	dgsEditor.WidgetColorMain:dgsComponentSelector(260,90,100,25,true,false)
+		:bindToColorPicker(dgsEditor.ColorPicker,"RGB","B")
+	dgsEditor.WidgetColorMain:dgsLabel(230,90,25,25,"Blue:",false)
+		:setProperty("alignment",{"right","center"})
+	--Alpha Selector
+	dgsEditor.WidgetColorMain:dgsComponentSelector(260,130,100,25,true,false)
+		:bindToColorPicker(dgsEditor.ColorPicker,"RGB","A")
+	dgsEditor.WidgetColorMain:dgsLabel(230,130,25,25,"Alpha:",false)
+		:setProperty("alignment",{"right","center"})
 	
 	--detach from color picker
 	dgsEditor.BackGround:on("dgsMouseClickDown",function()
-		if source ~= dgsEditor.WidgetColorMain and source ~= dgsEditor.ColorPicker then
+		if source ~= dgsEditor.WidgetColorMain then
+			for _, element in pairs(dgsEditor.WidgetColorMain.children) do
+				if source == element then
+					return
+				end
+			end
 			dgsEditor.WidgetColorMain.visible = false
 			if colorEdit then
 				for _, tableEdits in pairs(colorEdit) do
 					for e, edit in pairs(tableEdits) do
-						if edit:getProperty("bindColorPicker") then
+						if edit.bindColorPicker then
 							edit:unbindFromColorPicker()
 						end
 					end
@@ -242,14 +260,14 @@ function dgsEditorCreateMainPanel()
 			end
 			if textColorEdit then
 				for e, edit in pairs(textColorEdit) do
-					if edit:getProperty("bindColorPicker") then
+					if edit.bindColorPicker then
 						edit:unbindFromColorPicker()
 					end
 				end
 			end
 			if shadowColorEdit then
 				for e, edit in pairs(shadowColorEdit) do
-					if edit:getProperty("bindColorPicker") then
+					if edit.bindColorPicker then
 						edit:unbindFromColorPicker()
 					end
 				end
@@ -298,6 +316,7 @@ function dgsEditorCreateElement(dgsType,...)
 		createdElement = dgsEditor.Canvas:dgsWindow(0,0,100,100,"window",false)
 			:setMovable(false)
 			:setSizable(false)
+			:setProperty("ignoreTitle",true)
 	elseif dgsType == "dgs-dxtabpanel" then
 		createdElement = dgsEditor.Canvas:dgsTabPanel(0,0,100,100,false)
 	end
@@ -308,6 +327,24 @@ function dgsEditorCreateElement(dgsType,...)
 		--When clicked the element, turn it into "operating element"
 		dgsEditor.Controller.visible = true	--Make the controller visible
 		dgsEditorControllerAttach(createdElement)
+	end)
+	--Set the parent to the element
+	createdElement:on("dgsMouseClickUp",function()
+		local source = dgsGetInstance(dgsEditor.Controller.BoundChild)
+		local parent = dgsEditor.Canvas
+		for _, element in pairs(dgsEditor.ElementList) do
+			if dgsIsMouseWithinGUI(element.dgsElement) then
+				if source.dgsElement ~= element.dgsElement and source.parent ~= element.dgsElement then
+					if table.find(DGSParents,element:getType()) then
+						parent = element
+						break
+					end
+				end
+			end
+		end
+		dgsEditorControllerDetach()
+		source:setParent(parent)
+		dgsEditorControllerAttach(source)
 	end)
 	--Record the element
 	dgsEditor.ElementList[createdElement.dgsElement] = createdElement
@@ -321,7 +358,7 @@ function dgsEditorControllerAttach(targetElement)
 	--Record the operating element as the child element of controller (to proxy the positioning and resizing of operating element with controller)
 	dgsEditor.Controller.BoundChild = targetElement.dgsElement
 	--Set the parent element
-	dgsEditor.Controller:setParent(targetElement:getParent())
+	dgsEditor.Controller:setParent(dgsEditor.Canvas)
 	--Set the child element
 	targetElement:setParent(dgsEditor.Controller)
 	--Use operating element's position
@@ -343,15 +380,6 @@ function dgsEditorControllerAttach(targetElement)
 end
 
 function dgsEditorControllerDetach()
-	for _, element in pairs(dgsEditor.ElementList) do
-		if dgsEditor.Controller.BoundChild ~= element.dgsElement then
-			if dgsIsMouseWithinGUI(element.dgsElement) and dgsIsMouseWithinGUI(dgsEditor.Controller.BoundChild) then
-				if table.find(DGSParents,element:getType()) then
-				dgsEditor.Controller.BoundParent = element.dgsElement
-				end
-			end
-		end
-	end
 	--Get the instance of parent (controller's & operating element's)
 	local p = dgsGetInstance(dgsEditor.Controller.BoundParent)
 	--If the operating element exists
@@ -574,10 +602,10 @@ function dgsEditorPropertiesMenuAttach(targetElement)
 		dgsEditor.WidgetPropertiesMenu:setItemData(i,1,property)
 		if property == "alignment" then
 			local text = {"alignX","alignY"}
-			for a, align in pairs(targetElement:getProperty(property)) do
+			for a, align in pairs(targetElement[property]) do
 				local rowSection = dgsEditor.WidgetPropertiesMenu:addRow(rowSection,text[a])
 				local combobox = dgsEditor.WidgetPropertiesMenu
-					:dgsComboBox(0,0,150,20,false)
+					:dgsComboBox(0,5,150,20,false)
 					:attachToGridList(dgsEditor.WidgetPropertiesMenu.dgsElement,rowSection,2)
 				for i, alignment in pairs(alignments[a]) do
 					combobox:addItem(alignment)
@@ -591,19 +619,18 @@ function dgsEditorPropertiesMenuAttach(targetElement)
 				combobox:on("dgsMouseClick",function()
 					source:bringToFront() -- no effect, maybe bring to front item list
 				end)
-				combobox:setPosition(0,5,false)
 			end
 		elseif property == "color" then
 			colorEdit = {}
-			for c, color in pairs(targetElement:getProperty(property)) do
+			imageColor = {}
+			for c, color in pairs(targetElement[property]) do
 				local rowSection = dgsEditor.WidgetPropertiesMenu:addRow(rowSection,colors[c])
 				local color = {fromcolor(color,true)}
 				local bind = {"R","G","B","A"}
 				colorEdit[rowSection] = {}
 				for i,v in pairs(color) do
 					colorEdit[rowSection][i] = dgsEditor.WidgetPropertiesMenu
-						:dgsEdit(0,0,30,20,false)
-						:setText(v)
+						:dgsEdit(i*35-35,5,30,20,v,false)
 						:attachToGridList(dgsEditor.WidgetPropertiesMenu.dgsElement,rowSection,2)
 						:on("dgsTextChange",function()
 							local tempColor = {}
@@ -625,15 +652,25 @@ function dgsEditorPropertiesMenuAttach(targetElement)
 								local r3,g3,b3,a3 = unpack(tempColor[3])
 								if r1 and g1 and b1 and a1 and r2 and g2 and b2 and a2 and r3 and g3 and b3 and a3 then
 									targetElement:setProperty(property, {tocolor(r1,g1,b1,a1),tocolor(r2,g2,b2,a2),tocolor(r3,g3,b3,a3)})
+									if #imageColor == 3 then
+										imageColor[1]:setProperty("color",tocolor(r1,g1,b1,a1))
+										imageColor[2]:setProperty("color",tocolor(r2,g2,b2,a2))
+										imageColor[3]:setProperty("color",tocolor(r3,g3,b3,a3))
+									end
 								end
 							end
 						end)
-					colorEdit[rowSection][i]:setPosition(i*35-35,5,false)
-						:setMaxLength(3)
+					colorEdit[rowSection][i]:setMaxLength(3)
 						:setWhiteList("[^0-9]")
+					if i < 4 then
+						local label = dgsEditor.WidgetPropertiesMenu
+							:dgsLabel(i*35-5,5,5,20,",")
+							:setProperty("alignment",{"left","bottom"})
+							:attachToGridList(dgsEditor.WidgetPropertiesMenu.dgsElement,rowSection,2)
+					end
 				end
 				local button = dgsEditor.WidgetPropertiesMenu
-					:dgsButton(0,0,20,20,"+",false)
+					:dgsButton(140,5,20,20,"+",false)
 					:setProperty("alignment",{"center","center"})
 					:attachToGridList(dgsEditor.WidgetPropertiesMenu.dgsElement,rowSection,2)
 					:on("dgsMouseClickUp",function()
@@ -641,44 +678,42 @@ function dgsEditorPropertiesMenuAttach(targetElement)
 						local x,y = source:getPosition(false,true)
 						local w,h = unpack(source.size)
 						dgsEditor.WidgetColorMain.position.x = x+w-dgsEditor.WidgetColorMain.size.w
-						dgsEditor.WidgetColorMain.position.y = y+h
+						dgsEditor.WidgetColorMain.position.y = y+h+5
 						dgsEditor.WidgetColorMain:bringToFront()
 						local tempColor = {}
-						for e, edit in pairs(colorEdit[source:getProperty("attachedToGridList")[2]]) do
+						for e, edit in pairs(colorEdit[source.attachedToGridList[2]]) do
 							tempColor[e] = tonumber(edit:getText())
 							edit:bindToColorPicker(dgsEditor.ColorPicker,"RGB",bind[e])
 						end
 						local r,g,b,a = unpack(tempColor)
 						dgsEditor.ColorPicker:setColor(r,g,b,a,"RGB")
 					end)
-				button:setPosition(140,5,false)
+				local r,g,b,a = unpack(color)
+				imageColor[c] = dgsEditor.WidgetPropertiesMenu
+					:dgsImage(0,25,160,5,_,false,tocolor(r,g,b,a))
+					:attachToGridList(dgsEditor.WidgetPropertiesMenu.dgsElement,rowSection,2)
 			end
 		elseif property == "colorCoded" then
 			local switch = dgsEditor.WidgetPropertiesMenu
-				:dgsSwitchButton(0,0,50,20,"","",targetElement:getProperty(property))
+				:dgsSwitchButton(10,5,50,20,"","",targetElement[property])
 				:attachToGridList(dgsEditor.WidgetPropertiesMenu.dgsElement,row,2)
-				:on("dgsMouseClickDown",function()
-					targetElement:setProperty(property, not source:getState())
+				:on("dgsSwitchButtonStateChange",function(state)
+					targetElement:setProperty(property,state)
 				end)
-			switch:setPosition(10,5,false)
 		elseif property == "text" then
 			local edit = dgsEditor.WidgetPropertiesMenu
-				:dgsEdit(0,0,150,20,false)
-				:setText(targetElement:getProperty(property))
+				:dgsEdit(10,5,150,20,targetElement[property],false)
 				:attachToGridList(dgsEditor.WidgetPropertiesMenu.dgsElement,row,2)
 				:on("dgsEditAccepted",function()
 					targetElement:setProperty(property, source:getText())
 				end)
-			edit:setPosition(10,5,false)
 		elseif property == "textColor" then
-			local color = targetElement:getProperty(property)
-			local color = {fromcolor(color,true)}
+			local color = {fromcolor(targetElement[property],true)}
 			local bind = {"R","G","B","A"}
 			textColorEdit = {}
 			for i,v in pairs(color) do
 				textColorEdit[i] = dgsEditor.WidgetPropertiesMenu
-					:dgsEdit(0,0,30,20,false)
-					:setText(v)
+					:dgsEdit(i*35-35+10,5,30,20,v,false)
 					:attachToGridList(dgsEditor.WidgetPropertiesMenu.dgsElement,row,2)
 					:on("dgsTextChange",function()
 						local tempColor = {}
@@ -693,15 +728,23 @@ function dgsEditorPropertiesMenuAttach(targetElement)
 							local r,g,b,a = unpack(tempColor)
 							if r and g and b and a then
 								targetElement:setProperty(property, tocolor(r,g,b,a))
+								if imageTextColor then
+									imageTextColor:setProperty("color",tocolor(r,g,b,a))
+								end
 							end
 						end
-					end)
-				textColorEdit[i]:setPosition(i*35-35+10,5,false)
-					:setMaxLength(3)
+					end)	
+				textColorEdit[i]:setMaxLength(3)
 					:setWhiteList("[^0-9]")
+				if i < 4 then
+					local label = dgsEditor.WidgetPropertiesMenu
+						:dgsLabel(i*35+5,5,5,20,",")
+						:setProperty("alignment",{"left","bottom"})
+						:attachToGridList(dgsEditor.WidgetPropertiesMenu.dgsElement,row,2)
+				end
 			end
 			local button = dgsEditor.WidgetPropertiesMenu
-				:dgsButton(0,0,20,20,"+",false)
+				:dgsButton(150,5,20,20,"+",false)
 				:setProperty("alignment",{"center","center"})
 				:attachToGridList(dgsEditor.WidgetPropertiesMenu.dgsElement,row,2)
 				:on("dgsMouseClickUp",function()
@@ -709,7 +752,7 @@ function dgsEditorPropertiesMenuAttach(targetElement)
 					local x,y = source:getPosition(false,true)
 					local w,h = unpack(source.size)
 					dgsEditor.WidgetColorMain.position.x = x+w-dgsEditor.WidgetColorMain.size.w
-					dgsEditor.WidgetColorMain.position.y = y+h
+					dgsEditor.WidgetColorMain.position.y = y+h+5
 					dgsEditor.WidgetColorMain:bringToFront()
 					local tempColor = {}
 					for e, edit in pairs(textColorEdit) do
@@ -719,24 +762,25 @@ function dgsEditorPropertiesMenuAttach(targetElement)
 					local r,g,b,a = unpack(tempColor)
 					dgsEditor.ColorPicker:setColor(r,g,b,a,"RGB")
 				end)
-			button:setPosition(150,5,false)
+				local r,g,b,a = unpack(color)
+				imageTextColor = dgsEditor.WidgetPropertiesMenu
+					:dgsImage(10,25,160,5,_,false,tocolor(r,g,b,a))
+					:attachToGridList(dgsEditor.WidgetPropertiesMenu.dgsElement,row,2)
 		elseif property == "textSize" then
 			local text = {"scaleX","scaleY"}
 			local edit = {}
-			for i, scale in pairs(targetElement:getProperty(property)) do
+			for i, scale in pairs(targetElement[property]) do
 				local rowSection = dgsEditor.WidgetPropertiesMenu:addRow(rowSection,text[i])
 				edit[i] = dgsEditor.WidgetPropertiesMenu
-					:dgsEdit(0,0,50,20,false)
-					:setText(scale)
+					:dgsEdit(0,5,50,20,scale,false)
 					:attachToGridList(dgsEditor.WidgetPropertiesMenu.dgsElement,rowSection,2)
 					:on("dgsEditAccepted",function()
 						targetElement:setProperty(property,{tonumber(edit[1]:getText()),tonumber(edit[2]:getText())})
 					end)
-				edit[i]:setPosition(0,5,false)
 			end
 		elseif property == "font" then
 			local combobox = dgsEditor.WidgetPropertiesMenu
-				:dgsComboBox(0,0,150,20,false)
+				:dgsComboBox(10,5,150,20,false)
 				:attachToGridList(dgsEditor.WidgetPropertiesMenu.dgsElement,row,2)
 			for r, font in pairs(fonts) do
 				combobox:addItem(font)
@@ -747,12 +791,20 @@ function dgsEditorPropertiesMenuAttach(targetElement)
 			combobox:on("dgsComboBoxSelect",function(row)
 				targetElement:setProperty("font", combobox:getItemText(row))
 			end)
-			combobox:setPosition(10,5,false)
 		elseif property == "shadow" then
-			if targetElement:getProperty(property) then
+			if targetElement[property] then
+				local button = dgsEditor.WidgetPropertiesMenu
+					:dgsButton(10,5,150,20,"remove shadow",false)
+					:setProperty("alignment",{"center","center"})
+					:attachToGridList(dgsEditor.WidgetPropertiesMenu.dgsElement,row,2)
+					:on("dgsMouseClickDown",function()
+						targetElement:setProperty(property,nil)
+						dgsEditorPropertiesMenuDetach()
+						dgsEditorPropertiesMenuAttach(targetElement)
+					end)
 				local text = {"offsetX","offsetY","color","outline"}
 				local shadowEdit = {}
-				for i, value in pairs(targetElement:getProperty(property)) do
+				for i, value in pairs(targetElement[property]) do
 					local rowSection = dgsEditor.WidgetPropertiesMenu:addRow(rowSection,text[i])
 					if text[i] == "color" then
 						local color = {fromcolor(value,true)}
@@ -760,8 +812,7 @@ function dgsEditorPropertiesMenuAttach(targetElement)
 						shadowColorEdit = {}
 						for i, v in pairs(color) do
 							shadowColorEdit[i] = dgsEditor.WidgetPropertiesMenu
-								:dgsEdit(0,0,30,20,false)
-								:setText(v)
+								:dgsEdit(i*35-35,5,30,20,v,false)
 								:attachToGridList(dgsEditor.WidgetPropertiesMenu.dgsElement,rowSection,2)
 								:on("dgsTextChange",function()
 									local tempColor = {}
@@ -775,16 +826,28 @@ function dgsEditorPropertiesMenuAttach(targetElement)
 									if tempColor then
 										local r,g,b,a = unpack(tempColor)
 										if r and g and b and a and shadowEdit[4] then
-											targetElement:setProperty(property,{tonumber(shadowEdit[1]:getText()),tonumber(shadowEdit[2]:getText()),tocolor(r,g,b,a),not shadowEdit[4]:getState()})
+											targetElement:setProperty(property,{tonumber(shadowEdit[1]:getText()),tonumber(shadowEdit[2]:getText()),tocolor(r,g,b,a),shadowEdit[4]:getState()})
+											if imageShadowColor then
+												imageShadowColor:setProperty("color",tocolor(r,g,b,a))
+											end
 										end
 									end
 								end)
-							shadowColorEdit[i]:setPosition(i*35-35,5,false)
-								:setMaxLength(3)
+							shadowColorEdit[i]:setMaxLength(3)
 								:setWhiteList("[^0-9]")
+							if i < 4 then
+								local label = dgsEditor.WidgetPropertiesMenu
+									:dgsLabel(i*35-5,5,5,20,",")
+									:setProperty("alignment",{"left","bottom"})
+									:attachToGridList(dgsEditor.WidgetPropertiesMenu.dgsElement,rowSection,2)
+							end
 						end
+						local r,g,b,a = unpack(color)
+						imageShadowColor = dgsEditor.WidgetPropertiesMenu
+							:dgsImage(0,25,160,5,_,false,tocolor(r,g,b,a))
+							:attachToGridList(dgsEditor.WidgetPropertiesMenu.dgsElement,rowSection,2)
 						local button = dgsEditor.WidgetPropertiesMenu
-							:dgsButton(0,0,20,20,"+",false)
+							:dgsButton(140,5,20,20,"+",false)
 							:setProperty("alignment",{"center","center"})
 							:attachToGridList(dgsEditor.WidgetPropertiesMenu.dgsElement,rowSection,2)
 							:on("dgsMouseClickUp",function()
@@ -792,7 +855,7 @@ function dgsEditorPropertiesMenuAttach(targetElement)
 								local x,y = source:getPosition(false,true)
 								local w,h = unpack(source.size)
 								dgsEditor.WidgetColorMain.position.x = x+w-dgsEditor.WidgetColorMain.size.w
-								dgsEditor.WidgetColorMain.position.y = y+h
+								dgsEditor.WidgetColorMain.position.y = y+h+5
 								dgsEditor.WidgetColorMain:bringToFront()
 								local tempColor = {}
 								for e, edit in pairs(shadowColorEdit) do
@@ -802,12 +865,11 @@ function dgsEditorPropertiesMenuAttach(targetElement)
 								local r,g,b,a = unpack(tempColor)
 								dgsEditor.ColorPicker:setColor(r,g,b,a,"RGB")
 							end)
-						button:setPosition(140,5,false)
 					elseif text[i] == "outline" then
 						shadowEdit[i] = dgsEditor.WidgetPropertiesMenu
-							:dgsSwitchButton(0,0,50,20,"","",targetElement:getProperty(property))
+							:dgsSwitchButton(0,5,50,20,"","",targetElement[property])
 							:attachToGridList(dgsEditor.WidgetPropertiesMenu.dgsElement,rowSection,2)
-							:on("dgsMouseClickDown",function()
+							:on("dgsSwitchButtonStateChange",function(state)
 								local tempColor = {}
 								for e, edit in pairs(shadowColorEdit) do
 									local arg = tonumber(edit:getText())
@@ -819,16 +881,13 @@ function dgsEditorPropertiesMenuAttach(targetElement)
 								if tempColor then
 									local r,g,b,a = unpack(tempColor)
 									if r and g and b and a then
-										targetElement:setProperty(property,{tonumber(shadowEdit[1]:getText()),tonumber(shadowEdit[2]:getText()),tocolor(r,g,b,a),not shadowEdit[4]:getState()})
+										targetElement:setProperty(property,{tonumber(shadowEdit[1]:getText()),tonumber(shadowEdit[2]:getText()),tocolor(r,g,b,a),state})
 									end
 								end
 							end)
-						shadowEdit[i]:setPosition(0,5,false)
 					else
 					shadowEdit[i] = dgsEditor.WidgetPropertiesMenu
-						:dgsEdit(0,0,50,20,false)
-						:setText(value)
-						:setPosition(0,5,false)
+						:dgsEdit(0,5,50,20,value,false)
 						:attachToGridList(dgsEditor.WidgetPropertiesMenu.dgsElement,rowSection,2)
 						:on("dgsEditAccepted",function()
 							local tempColor = {}
@@ -842,7 +901,7 @@ function dgsEditorPropertiesMenuAttach(targetElement)
 							if tempColor then
 								local r,g,b,a = unpack(tempColor)
 								if r and g and b and a then
-									targetElement:setProperty(property,{tonumber(shadowEdit[1]:getText()),tonumber(shadowEdit[2]:getText()),tocolor(r,g,b,a),not shadowEdit[4]:getState()})
+									targetElement:setProperty(property,{tonumber(shadowEdit[1]:getText()),tonumber(shadowEdit[2]:getText()),tocolor(r,g,b,a),shadowEdit[4]:getState()})
 								end
 							end
 						end)
@@ -850,7 +909,7 @@ function dgsEditorPropertiesMenuAttach(targetElement)
 				end
 			else
 				local button = dgsEditor.WidgetPropertiesMenu
-					:dgsButton(0,0,150,20,"add shadow",false)
+					:dgsButton(10,5,150,20,"add shadow",false)
 					:setProperty("alignment",{"center","center"})
 					:attachToGridList(dgsEditor.WidgetPropertiesMenu.dgsElement,row,2)
 					:on("dgsMouseClickDown",function()
@@ -858,39 +917,39 @@ function dgsEditorPropertiesMenuAttach(targetElement)
 						dgsEditorPropertiesMenuDetach()
 						dgsEditorPropertiesMenuAttach(targetElement)
 					end)
-				button:setPosition(10,5,false)
 			end
 		elseif property == "wordBreak" then
 			local switch = dgsEditor.WidgetPropertiesMenu
-				:dgsSwitchButton(0,0,50,20,"","",targetElement:getProperty(property))
+				:dgsSwitchButton(10,5,50,20,"","",targetElement[property])
 				:attachToGridList(dgsEditor.WidgetPropertiesMenu.dgsElement,row,2)
-				:on("dgsMouseClickDown",function()
-					targetElement:setProperty(property, not source:getState())
+				:on("dgsSwitchButtonStateChange",function(state)
+					targetElement:setProperty(property,state)
 				end)
-			switch:setPosition(10,5,false)
 		end
 	end
 	local row = dgsEditor.WidgetPropertiesMenu:addRow(row,"")
 	local button = dgsEditor.WidgetPropertiesMenu
-		:dgsButton(0,0,150,20,"destroy element",false)
+		:dgsButton(0,5,150,20,"destroy element",false)
 		:setProperty("alignment",{"center","center"})
 		:attachToGridList(dgsEditor.WidgetPropertiesMenu.dgsElement,row,2)
 		:on("dgsMouseClickUp",function()
 			dgsEditorDestroyElement()
 		end)
-	button:setPosition(0,5,false)
 end
 
 function dgsEditorPropertiesMenuDetach()
 	dgsEditor.WidgetPropertiesMenu:clearRow()
 	for _, child in pairs(dgsEditor.WidgetPropertiesMenu.children) do
 		if child:getType() ~= "dgs-dxscrollbar" then
-			colorEdit = nil
-			textColorEdit = nil
-			shadowColorEdit = nil
 			child:destroy()
 		end
 	end
+	colorEdit = nil
+	textColorEdit = nil
+	shadowColorEdit = nil
+	imageColor = nil
+	imageTextColor = nil
+	imageShadowColor = nil
 end
 
 -- destroy element
