@@ -162,25 +162,6 @@ DGSTypeReference = {
 	{"dgs-dxwindow","DGSWindow"},
 }
 
-DGSPropertiesList = {
-	["dgs-dxbutton"] = {"alignment","color","colorCoded","text","textColor","textSize","font","shadow","wordBreak"},
-	["dgs-dxcheckbox"] = {},
-	["dgs-dxcombobox"] = {},
-	["dgs-dxgridlist"] = {},
-	["dgs-dximage"] = {},
-	["dgs-dxlabel"] = {},
-	["dgs-dxmemo"] = {},
-	["dgs-dxedit"] = {},
-	["dgs-dxprogressbar"] = {},
-	["dgs-dxradiobutton"] = {},
-	["dgs-dxscrollbar"] = {},
-	["dgs-dxscrollpane"] = {},
-	["dgs-dxselector"] = {},
-	["dgs-dxswitchbutton"] = {},
-	["dgs-dxtabpanel"] = {},
-	["dgs-dxwindow"] = {"alignment","font","text","textSize","textColor"},
-}
-
 fonts = {"default","default-bold","clear","arial","sans","pricedown","bankgothic","diploma","beckett"}
 
 colors = {"normalColor","hoveringColor","clickedColor"}
