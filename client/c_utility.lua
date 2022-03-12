@@ -120,6 +120,23 @@ function table.count(tabl)
 	return cnt
 end
 
+function table.find(tab,ke,num)
+	if num then
+		for k,v in pairs(tab) do
+			if v[num] == ke then
+				return k
+			end
+		end
+	else
+		for k,v in pairs(tab) do
+			if v == ke then
+				return k
+			end
+		end
+	end
+	return false
+end
+
 ------------------Events
 
 addEvent("onClientDGSEditorRequestStateChange",true)	--When DGS editor's state changes (available or disabled)
@@ -145,25 +162,6 @@ DGSTypeReference = {
 	{"dgs-dxwindow","DGSWindow"},
 }
 
-DGSPropertiesList = {
-	["dgs-dxbutton"] = {"alignment","color","colorCoded","text","textColor","textSize","font","shadow","wordBreak"},
-	["dgs-dxcheckbox"] = {},
-	["dgs-dxcombobox"] = {},
-	["dgs-dxgridlist"] = {},
-	["dgs-dximage"] = {},
-	["dgs-dxlabel"] = {},
-	["dgs-dxmemo"] = {},
-	["dgs-dxedit"] = {},
-	["dgs-dxprogressbar"] = {},
-	["dgs-dxradiobutton"] = {},
-	["dgs-dxscrollbar"] = {},
-	["dgs-dxscrollpane"] = {},
-	["dgs-dxselector"] = {},
-	["dgs-dxswitchbutton"] = {},
-	["dgs-dxtabpanel"] = {},
-	["dgs-dxwindow"] = {},
-}
-
 fonts = {"default","default-bold","clear","arial","sans","pricedown","bankgothic","diploma","beckett"}
 
 colors = {"normalColor","hoveringColor","clickedColor"}
@@ -172,3 +170,5 @@ alignments = {
 	{"left","center","right"},
 	{"top","center","bottom"},
 }
+
+DGSParents = {"dgs-dxgridlist","dgs-dxscrollpane","dgs-dxtabpanel","dgs-dxwindow"}

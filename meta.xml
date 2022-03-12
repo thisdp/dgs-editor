@@ -1,17 +1,19 @@
 <meta>
-    <info author="thisdp" version="0.1" name="DGS Editor" description="Editor for DGS" type="misc" />
-    <script src="client/c_utility.lua" type="client" />
-    <script src="languages/languageManager.lua" type="client" />
+	<info author="thisdp" version="0.1" name="DGS Editor" description="Editor for DGS" type="misc" />
+
+	<script src="languages/languageManager.lua" type="client" />
 	<file src="languages/en-us.lang" />
 	<file src="languages/zh-cn.lang" />
 	<file src="languages/ar.lang" />
 	<file src="languages/pt-br.lang" />
 	<file src="languages/ru.lang" />
 	
-    <script src="client/c_settings.lua" type="client" />
-    <script src="client/c_main.lua" type="client" />
-    <script src="server/s_main.lua" type="server" />
-	
+	<script src="client/c_utility.lua" type="client" />
+	<script src="client/c_settings.lua" type="client" />
+	<script src="client/c_main.lua" type="client" />
+	<script src="server/s_main.lua" type="server" />
+
+	<file src="client/alphaCircle.fx" />
 	<file src="icons/DGSButton.png" />
 	<file src="icons/DGSCheckBox.png" />
 	<file src="icons/DGSComboBox.png" />
@@ -28,5 +30,6 @@
 	<file src="icons/DGSSwitchButton.png" />
 	<file src="icons/DGSTabPanel.png" />
 	<file src="icons/DGSWindow.png" />
-    <oop>true</oop>
+
+	<oop>true</oop>
 </meta>
