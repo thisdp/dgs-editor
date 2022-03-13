@@ -60,8 +60,7 @@ function dgsEditorCreateMainPanel()
 	dgsEditor.Canvas = dgsEditor.BackGround:dgsScalePane(0.2,0.2,0.6,0.6,true,sW,sH)
 		:on("dgsDrop",function(data)
 			local cursorX,cursorY = dgsRootInstance:getCursorPosition(source)
-			print(cursorX,cursorY)
-			dgsEditorCreateElement(data)
+			dgsEditorCreateElement(data,cursorX,cursorY)
 		end)
 	dgsEditor.Canvas.bgColor = tocolor(0,0,0,128)
 	--Widgets Window
@@ -206,9 +205,10 @@ function dgsEditorCreateMainPanel()
 end
 -----------------------------------------------------Element management
 function dgsEditorCreateElement(dgsType,...)
-	local arguments = {...}
+	local args = {...}
 --	if #arguments == 0 then
 	local createdElement
+	local x,y = args[1],args[2]
 	if dgsType == "dgs-dxbutton" then
 		createdElement = dgsEditor.Canvas:dgsButton(0,0,80,30,"Button",false)
 	elseif dgsType == "dgs-dximage" then
@@ -245,27 +245,29 @@ function dgsEditorCreateElement(dgsType,...)
 	elseif dgsType == "dgs-dxtabpanel" then
 		createdElement = dgsEditor.Canvas:dgsTabPanel(0,0,100,100,false)
 	end
+	if x and y then createdElement:setPosition(x,y,false,true) end
 	createdElement.isCreatedByEditor = true
 	--When clicking the element
-	createdElement:on("dgsMouseClickDown",function()
-		if dgsEditor.Controller.FindParent then return end
-		dgsEditorControllerDetach()
-		--When clicked the element, turn it into "operating element"
-		dgsEditor.Controller.visible = true	--Make the controller visible
-		dgsEditorControllerAttach(createdElement)
-	end)
-	--Set the parent to the element
-	createdElement:on("dgsMouseClickDown",function()
-		if dgsEditor.Controller.FindParent then
-			local c = dgsGetInstance(dgsEditor.Controller.BoundChild)
-			c:setParent(createdElement)
-			c.position.relative = dgsEditor.Controller.position.relative
-			c.position = {0,0}
-			c.size.relative = dgsEditor.Controller.size.relative
-			c.size = dgsEditor.Controller.size
-			dgsEditor.Controller.FindParent = nil
-			dgsEditorPropertiesMenuDetach()
-			dgsEditorControllerAttach(c)
+	createdElement:on("dgsMouseClickDown",function(button,state)
+		if button == "left" then
+			if dgsEditor.Controller.FindParent then
+				--Set the parent to the element
+				local c = dgsGetInstance(dgsEditor.Controller.BoundChild)
+				c:setParent(createdElement)
+				c.position.relative = dgsEditor.Controller.position.relative
+				c.position = {0,0}
+				c.size.relative = dgsEditor.Controller.size.relative
+				c.size = dgsEditor.Controller.size
+				dgsEditor.Controller.FindParent = nil
+				dgsEditorPropertiesMenuDetach()
+				dgsEditorControllerAttach(c)
+			else
+				--Just click
+				dgsEditorControllerDetach()
+				--When clicked the element, turn it into "operating element"
+				dgsEditor.Controller.visible = true	--Make the controller visible
+				dgsEditorControllerAttach(createdElement)
+			end
 		end
 	end)
 	--Record the element
@@ -510,9 +512,11 @@ function dgsEditorCreateController(theCanvas)
 	}
 	Line.visible = false
 	--When clicking the canvas, hide the controller
-	theCanvas:on("dgsMouseClickDown",function()
-		Line.visible = false
-		dgsEditorControllerDetach()
+	theCanvas:on("dgsMouseClickDown",function(button,state)
+		if button == "left" then
+			Line.visible = false
+			dgsEditorControllerDetach()
+		end
 	end)
 	return Line
 end
@@ -592,7 +596,7 @@ dgsEditorAttachProperty = {
 	text = function(targetElement,property,row)
 		dgsEditor.WidgetPropertiesMenu:dgsEdit(10,5,150,20,targetElement[property],false)
 			:attachToGridList(dgsEditor.WidgetPropertiesMenu,row,2)
-			:on("dgsEditAccepted",function()
+			:on("dgsTextChange",function()
 				targetElement:setProperty(property, source:getText())
 			end)
 	end,
@@ -780,7 +784,7 @@ function dgsEditorPropertiesMenuAttach(targetElement)
 				c.position = {0,0}
 				c.size.relative = dgsEditor.Controller.size.relative
 				c.size = dgsEditor.Controller.size
-				dgsEditorPropertiesMenuDetach()
+				dgsEditorPropertiesMenuDetach(true)
 				dgsEditorControllerAttach(c)
 			end)
 	else
