@@ -637,9 +637,9 @@ dgsEditorAttachProperty = {
 			local rowSection = dgsEditor.WidgetPropertiesMenu:addRow(_,text[i])
 			dgsEditor.WidgetPropertiesMenu:dgsEdit(0,5,50,20,scale,false)
 				:attachToGridList(dgsEditor.WidgetPropertiesMenu,rowSection,2)
-				:on("dgsEditAccepted",function()
+				:on("dgsTextChange",function()
 					local tempProperty = targetElement[property]
-					tempProperty[i] = tonumber(source:getText())
+					tempProperty[i] = tonumber(source:getText()) or tempProperty[i]
 					targetElement[property] = tempProperty
 				end)
 		end
@@ -665,7 +665,7 @@ dgsEditorAttachProperty = {
 				:attachToGridList(dgsEditor.WidgetPropertiesMenu,row,2)
 				:on("dgsMouseClickDown",function()
 					targetElement:setProperty(property,nil)
-					dgsEditorPropertiesMenuDetach()
+					dgsEditorPropertiesMenuDetach(true)
 					dgsEditorPropertiesMenuAttach(targetElement)
 				end)
 			local text = {"offsetX","offsetY","color","outline"}
@@ -731,7 +731,7 @@ dgsEditorAttachProperty = {
 				:attachToGridList(dgsEditor.WidgetPropertiesMenu,row,2)
 				:on("dgsMouseClickDown",function()
 					targetElement:setProperty(property,{1,1,tocolor(0,0,0,255),true})
-					dgsEditorPropertiesMenuDetach()
+					dgsEditorPropertiesMenuDetach(true)
 					dgsEditorPropertiesMenuAttach(targetElement)
 				end)
 		end
@@ -805,8 +805,8 @@ function dgsEditorPropertiesMenuAttach(targetElement)
 		end)
 end
 
-function dgsEditorPropertiesMenuDetach()
-	dgsEditor.WidgetPropertiesMenu:clearRow()
+function dgsEditorPropertiesMenuDetach(keepPosition)
+	dgsEditor.WidgetPropertiesMenu:clearRow(_,keepPosition)
 	for _, child in pairs(dgsEditor.WidgetPropertiesMenu.children) do
 		--don't touch scrollbar
 		if child:getType() ~= "dgs-dxscrollbar" then
