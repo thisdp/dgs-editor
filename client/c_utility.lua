@@ -137,6 +137,13 @@ function table.find(tab,ke,num)
 	return false
 end
 
+function table.listKeys(tab)
+	local key = {}
+	for k,v in pairs(tab) do
+		key[#key+1] = k
+	end
+	return key
+end
 ------------------SVG
 outlineSVG = [[
 <svg width="100" height="30">

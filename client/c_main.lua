@@ -668,8 +668,13 @@ dgsEditorAttachProperty = {
 }
 
 function dgsEditorPropertiesMenuAttach(targetElement)
-	for property, table in pairs(dgsGetRegisteredProperties(targetElement:getType(),true)) do
-		for _, arguments in pairs(table) do
+	local propertiesList = dgsGetRegisteredProperties(targetElement:getType(),true)
+	local keys = table.listKeys(propertiesList)
+	table.sort(keys)
+	for i=1,#keys do
+		local property = keys[i]
+		local pTemplate = propertiesList[property]
+		for _, arguments in pairs(pTemplate) do
 			--If one argument
 			if type(dgsListPropertyTypes(arguments)) == "table" then
 				for i, arg in pairs(dgsListPropertyTypes(arguments)) do
