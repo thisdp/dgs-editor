@@ -137,6 +137,20 @@ function table.find(tab,ke,num)
 	return false
 end
 
+------------------SVG
+outlineSVG = [[
+<svg width="100" height="30">
+	<rect width="100%" height="100%" style="fill-opacity:0;stroke-width:3;stroke:black;" />
+</svg>
+]]
+
+function addElementOutline(element,offset)
+	local offset = offset or 1
+	element.size.relative = false
+	local svg = dgsSVG(element.size.w+offset*2,element.size.h+offset*2,outlineSVG)
+	element:dgsImage(-offset,-offset,element.size.w+offset*2,element.size.h+offset*2,svg,false)
+		:setEnabled(false)
+end
 ------------------Events
 
 addEvent("onClientDGSEditorRequestStateChange",true)	--When DGS editor's state changes (available or disabled)
@@ -160,6 +174,24 @@ DGSTypeReference = {
 	{"dgs-dxswitchbutton","DGSSwitchButton"},
 	{"dgs-dxtabpanel","DGSTabPanel"},
 	{"dgs-dxwindow","DGSWindow"},
+}
+
+DGSPropertyItemNames = {
+	absPos = {"x","y"},
+	absSize = {"width","height"},
+	rltPos = {"x","y"},
+	rltSize = {"width","height"},
+	rotationCenter = {"offsetX","offsetY"},
+	color = {"normalColor","hoveringColor","clickedColor"},
+	clickOffset = {"offsetX","offsetY"},
+	textSize = {"scaleX","scaleY"},
+	shadow = {"offsetX","offsetY","color","outline"},
+	iconSize = {"scaleX","scaleY","relative"},
+	iconOffset = {"offsetX","offsetY"},
+	textOffset = {"offsetX","offsetY","relative"},
+	image = {"normalImage","hoveringImage","clickedImage"},
+	alignment = {"alignX","alignY"},
+	relative = {"relativePos","relativeSize"},
 }
 
 fonts = {"default","default-bold","clear","arial","sans","pricedown","bankgothic","diploma","beckett"}
