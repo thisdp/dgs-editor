@@ -552,6 +552,7 @@ dgsEditorAttachProperty = {
 	end,
 	Bool = function(targetElement,property,row,offset,i)
 		local arg = targetElement[property]
+		iprint("BOOL",targetElement[property],property)
 		if i and type(arg) == "table" then arg = arg[i] end
 		if not arg then return end
 		dgsEditor.WidgetPropertiesMenu:dgsSwitchButton(offset or 0,5,50,20,"","",arg)
@@ -605,7 +606,8 @@ dgsEditorAttachProperty = {
 			:dgsImage(offset or 0,5,20,20,shader,false)
 			:attachToGridList(dgsEditor.WidgetPropertiesMenu,row,2)
 		dgsAttachToAutoDestroy(shader,imgBack.dgsElement)
-		local circleImage = dgsCreateCircle(0.5,0,360,tocolor(r,g,b,a))
+		local circleImage = dgsCreateCircle(0.48,0,360,tocolor(r,g,b,a))
+		dxSetShaderValue(circleImage,"borderSoft",0.02)
 		dgsAddPropertyListener(circleImage,"color")
 		addEventHandler("onDgsPropertyChange",circleImage,function(key,newValue,oldValue)
 				if key == "color" then
@@ -1021,7 +1023,6 @@ function dgsEditorCreateColorPicker()
 	--old/new color
 	local shader = dxCreateShader("client/alphaCircle.fx")
 	dxSetShaderValue(shader,"items",6)
-	dxSetShaderValue(shader,"outsideRadius",1)
 	local background = dgsEditor.WidgetColorMain
 		:dgsImage(300,190,80,80,shader,false)
 	addElementOutline(background)
