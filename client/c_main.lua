@@ -610,18 +610,18 @@ dgsEditorAttachProperty = {
 		dxSetShaderValue(circleImage,"borderSoft",0.02)
 		dgsAddPropertyListener(circleImage,"color")
 		addEventHandler("onDgsPropertyChange",circleImage,function(key,newValue,oldValue)
-				if key == "color" then
-					if i then
-						local tempProperty = targetElement[property]
-						tempProperty[i] = tocolor(fromcolor(newValue,true)) or tempProperty
-						targetElement[property] = tempProperty
-					else
-						local tempProperty = targetElement[property]
-						tempProperty = tocolor(fromcolor(newValue,true)) or tempProperty
-						targetElement[property] = tempProperty
-					end
+			if key == "color" then
+				if i then
+					local tempProperty = targetElement[property]
+					tempProperty[i] = tocolor(fromcolor(newValue,true)) or tempProperty
+					targetElement[property] = tempProperty
+				else
+					local tempProperty = targetElement[property]
+					tempProperty = tocolor(fromcolor(newValue,true)) or tempProperty
+					targetElement[property] = tempProperty
 				end
-			end)
+			end
+		end)
 		local img = dgsEditor.WidgetPropertiesMenu
 			:dgsImage(offset or 0,5,20,20,circleImage,false)
 			:attachToGridList(dgsEditor.WidgetPropertiesMenu,row,2)
