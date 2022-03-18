@@ -196,8 +196,8 @@ function dgsEditorCreateMainPanel()
 	local defaultRowColor = dgsEditor.WidgetPropertiesMenu.rowColor[1]
 	dgsEditor.WidgetPropertiesMenu:setProperty("rowColor",{defaultRowColor,defaultRowColor,defaultRowColor})
 
-	dgsEditor.WidgetPropertiesMenu:addColumn("",0.35)	--property name
-	dgsEditor.WidgetPropertiesMenu:addColumn("",0.65)	--edit
+	dgsEditor.WidgetPropertiesMenu:addColumn("",0.45)	--property name
+	dgsEditor.WidgetPropertiesMenu:addColumn("",0.55)	--edit
 	
 	dgsEditor.Controller = dgsEditorCreateController(dgsEditor.Canvas)
 	dgsEditorCreateColorPicker()
@@ -532,19 +532,22 @@ end
 
 dgsEditorAttachProperty = {
 	Number = function(targetElement,property,row,offset,i)
-		local arg = targetElement[property]
+		if property == "absPos" or property == "rltPos" then
+			arg = dgsEditor.Controller[property]
+		else
+			arg = targetElement[property]
+		end
 		if i and type(arg) == "table" then arg = arg[i] end
-		if not arg then return end
-		if type(arg) == "table" then iprint(property,arg) end
+		--iprint("NUMBER",property,arg)
+		if not arg then arg = 0 end
 		dgsEditor.WidgetPropertiesMenu:dgsEdit(offset or 0,5,50,20,arg,false)
 			:attachToGridList(dgsEditor.WidgetPropertiesMenu,row,2)
 			:on("dgsTextChange",function()
+				local tempProperty = targetElement[property]
 				if i then
-					local tempProperty = targetElement[property]
 					tempProperty[i] = tonumber(source:getText()) or tempProperty[i]
 					targetElement[property] = tempProperty
 				else
-					local tempProperty = targetElement[property]
 					tempProperty = tonumber(source:getText()) or tempProperty
 					targetElement[property] = tempProperty
 				end
@@ -552,41 +555,80 @@ dgsEditorAttachProperty = {
 	end,
 	Bool = function(targetElement,property,row,offset,i)
 		local arg = targetElement[property]
-		iprint("BOOL",targetElement[property],property)
 		if i and type(arg) == "table" then arg = arg[i] end
-		if not arg then return end
+		--iprint("BOOL",property,arg)
 		dgsEditor.WidgetPropertiesMenu:dgsSwitchButton(offset or 0,5,50,20,"","",arg)
 			:attachToGridList(dgsEditor.WidgetPropertiesMenu,row,2)
 			:on("dgsSwitchButtonStateChange",function(state)
-				targetElement[property] = state
+				local tempProperty = targetElement[property]
 				if i then
-					local tempProperty = targetElement[property]
-					tempProperty[i] = state or tempProperty
+					tempProperty[i] = state
 					targetElement[property] = tempProperty
 				else
-					local tempProperty = targetElement[property]
-					tempProperty = state or tempProperty
+					tempProperty = state
 					targetElement[property] = tempProperty
 				end
 			end)
 	end,
-	String = function(targetElement,property,row,offset,i)
+	String = function(targetElement,property,row,offset,i,text)
 		local arg = targetElement[property]
 		if i and type(arg) == "table" then arg = arg[i] end
-		if not arg then return end
-		dgsEditor.WidgetPropertiesMenu:dgsEdit(offset or 0,5,150,20,arg,false)
-			:attachToGridList(dgsEditor.WidgetPropertiesMenu,row,2)
-			:on("dgsTextChange",function()
+		--iprint("STRING",property,arg)
+		if not arg then arg = "" end
+		if property:lower():find("align") or (text and text:lower():find("align")) then
+			--Align combobox
+			local combobox = dgsEditor.WidgetPropertiesMenu:dgsComboBox(offset or 0,5,150,20,false)
+				:attachToGridList(dgsEditor.WidgetPropertiesMenu,row,2)
+			for i, align in pairs(alignments[text or "alignX"]) do
+				combobox:addItem(align)
+				if align == arg then
+					combobox:setSelectedItem(i)
+				end
+			end
+			combobox:on("dgsComboBoxSelect",function(row)
+				local tempProperty = targetElement[property]
 				if i then
-					local tempProperty = targetElement[property]
-					tempProperty[i] = source:getText() or tempProperty
+					tempProperty[i] = source:getItemText(row) or tempProperty[i]
 					targetElement[property] = tempProperty
 				else
-					local tempProperty = targetElement[property]
-					tempProperty = source:getText() or tempProperty
+					tempProperty = source:getItemText(row) or tempProperty
 					targetElement[property] = tempProperty
 				end
 			end)
+		elseif property:lower():find("font") then
+			--Font combobox
+			local combobox = dgsEditor.WidgetPropertiesMenu:dgsComboBox(offset or 0,5,150,20,false)
+				:attachToGridList(dgsEditor.WidgetPropertiesMenu,row,2)
+			for i, font in pairs(fonts) do
+				combobox:addItem(font)
+				if font == arg then
+					combobox:setSelectedItem(i)
+				end
+			end
+			combobox:on("dgsComboBoxSelect",function(row)
+				local tempProperty = targetElement[property]
+				if i then
+					tempProperty[i] = source:getItemText(row) or tempProperty[i]
+					targetElement[property] = tempProperty
+				else
+					tempProperty = source:getItemText(row) or tempProperty
+					targetElement[property] = tempProperty
+				end
+			end)
+		else
+			dgsEditor.WidgetPropertiesMenu:dgsEdit(offset or 0,5,150,20,arg,false)
+				:attachToGridList(dgsEditor.WidgetPropertiesMenu,row,2)
+				:on("dgsTextChange",function()
+					local tempProperty = targetElement[property]
+					if i then
+						tempProperty[i] = source:getText() or tempProperty[i]
+						targetElement[property] = tempProperty
+					else
+						tempProperty = source:getText() or tempProperty
+						targetElement[property] = tempProperty
+					end
+				end)
+		end
 	end,
 	Color = function(targetElement,property,row,offset,i)
 		local arg = targetElement[property]
@@ -596,10 +638,11 @@ dgsEditorAttachProperty = {
 				arg = arg[i]
 			end
 			if DGSPropertyItemNames[property] then
-				text = DGSPropertyItemNames[property][i]
+				text = DGSPropertyItemNames[property][i] or property
 			end
 		end
-		if not arg then return end
+		--iprint("COLOR",property,arg)
+		if not arg then arg = tocolor(0,0,0,0) end
 		local r,g,b,a = fromcolor(arg,true)
 		local shader = dxCreateShader("client/alphaCircle.fx")
 		local imgBack = dgsEditor.WidgetPropertiesMenu
@@ -611,12 +654,11 @@ dgsEditorAttachProperty = {
 		dgsAddPropertyListener(circleImage,"color")
 		addEventHandler("onDgsPropertyChange",circleImage,function(key,newValue,oldValue)
 			if key == "color" then
+				local tempProperty = targetElement[property]
 				if i then
-					local tempProperty = targetElement[property]
-					tempProperty[i] = tocolor(fromcolor(newValue,true)) or tempProperty
+					tempProperty[i] = tocolor(fromcolor(newValue,true)) or tempProperty[i]
 					targetElement[property] = tempProperty
 				else
-					local tempProperty = targetElement[property]
 					tempProperty = tocolor(fromcolor(newValue,true)) or tempProperty
 					targetElement[property] = tempProperty
 				end
@@ -644,16 +686,16 @@ dgsEditorAttachProperty = {
 	Text = function(targetElement,property,row,offset,i)
 		local arg = targetElement[property]
 		if i and type(arg) == "table" then arg = arg[i] end
-		if not arg then return end
+		--iprint("TEXT",property,arg)
+		if not arg then arg = "" end
 		dgsEditor.WidgetPropertiesMenu:dgsEdit(offset or 0,5,150,20,arg,false)
 			:attachToGridList(dgsEditor.WidgetPropertiesMenu,row,2)
 			:on("dgsTextChange",function()
+				local tempProperty = targetElement[property]
 				if i then
-					local tempProperty = targetElement[property]
-					tempProperty[i] = source:getText() or tempProperty
+					tempProperty[i] = source:getText() or tempProperty[i]
 					targetElement[property] = tempProperty
 				else
-					local tempProperty = targetElement[property]
 					tempProperty = source:getText() or tempProperty
 					targetElement[property] = tempProperty
 				end
@@ -664,12 +706,33 @@ dgsEditorAttachProperty = {
 			:setProperty("alignment",{"center","center"})
 			:attachToGridList(dgsEditor.WidgetPropertiesMenu,row,2)
 			:on("dgsMouseClickUp",function()
-				--todo
+				local values = {}
+				for _, args in pairs(dgsGetRegisteredProperties(targetElement:getType(),true)[property]) do
+					if type(args) == "table" then
+						for i, arg in pairs(args) do
+							local arg = dgsListPropertyTypes(arg)
+							local arg = table.concat(arg)
+							local value = false
+							if arg == "Number" then value = 0 end
+							if arg == "Bool" then value = true end
+							if arg == "String" then value = "" end
+							if arg == "Color" then value = tocolor(0,0,0,255) end
+							if arg == "Text" then value = "" end
+							table.insert(values,value)
+						end
+					end					
+				end
+				targetElement[property] = values
+				values = nil
+				dgsEditorPropertiesMenuDetach(true)
+				dgsEditorPropertiesMenuAttach(targetElement)
 			end)
 	end,
 }
 
 function dgsEditorPropertiesMenuAttach(targetElement)
+	--Window type element
+	dgsEditor.WidgetPropertiesMain:setText("DGSProperties, "..targetElement:getType())
 	local propertiesList = dgsGetRegisteredProperties(targetElement:getType(),true)
 	local keys = table.listKeys(propertiesList)
 	table.sort(keys)
@@ -677,66 +740,41 @@ function dgsEditorPropertiesMenuAttach(targetElement)
 		local property = keys[i]
 		local pTemplate = propertiesList[property]
 		for _, arguments in pairs(pTemplate) do
-			--If one argument
-			if type(dgsListPropertyTypes(arguments)) == "table" then
-				for i, arg in pairs(dgsListPropertyTypes(arguments)) do
-					local attach = dgsEditorAttachProperty[arg]
-					if attach then
-						local row = dgsEditor.WidgetPropertiesMenu:addRow(row,property)
-						dgsEditor.WidgetPropertiesMenu:setRowAsSection(row,true)
-						attach(targetElement,property,row,10) -- 10 the offset element
+			if type(arguments) == "table" then
+				--Сhecking whether this property is set
+				if targetElement[property] and type(targetElement[property]) == "table" and #targetElement[property] > 0 then
+					--If there are several arguments
+					for i, arg in pairs(arguments) do
+						local arg = dgsListPropertyTypes(arg)
+						local arg = arg[2] or arg[1]
+						local attach = dgsEditorAttachProperty[arg]
+						if attach then
+							--Add row section
+							if i == 1 then
+								local rowSection = dgsEditor.WidgetPropertiesMenu:addRow(rowSection,property)
+								dgsEditor.WidgetPropertiesMenu:setRowAsSection(rowSection,true)
+							end
+							local text = DGSPropertyItemNames[property] and DGSPropertyItemNames[property][i] or i
+							local row = dgsEditor.WidgetPropertiesMenu:addRow(row,text)
+							attach(targetElement,property,row,0,i,text)
+						end
 					end
+				else
+					--Add a button to add a property
+					local row = dgsEditor.WidgetPropertiesMenu:addRow(row,property)
+					dgsEditor.WidgetPropertiesMenu:setRowAsSection(row,true)
+					dgsEditorAttachProperty.add(targetElement,property,row)
+					break
 				end
 			else
-				--If there are several arguments
-				for i, args in pairs(arguments) do
-					--Сhecking whether this property is set
-					if targetElement:getProperty(property) then
-						if type(dgsListPropertyTypes(args)) == "table" then
-							for _, a in pairs(dgsListPropertyTypes(args)) do
-								local attach = dgsEditorAttachProperty[a]
-								if attach then
-									--Add row section true
-									if i == 1 then
-										local rowSection = dgsEditor.WidgetPropertiesMenu:addRow(rowSection,property)
-										dgsEditor.WidgetPropertiesMenu:setRowAsSection(rowSection,true)
-									end
-									local text = property..i
-									if DGSPropertyItemNames[property] then
-										text = DGSPropertyItemNames[property][i] or i
-									end
-									local row = dgsEditor.WidgetPropertiesMenu:addRow(row,text)
-									attach(targetElement,property,row,0,i) -- 0 the offset element
-								end
-							end
-						else
-							--If there are several arguments in arg
-							for i, arg in pairs(args) do
-								for _, a in pairs(dgsListPropertyTypes(arg)) do
-									local attach = dgsEditorAttachProperty[a]
-									if attach then
-										--Add row section true
-										if i == 1 then
-											local rowSection = dgsEditor.WidgetPropertiesMenu:addRow(rowSection,property)
-											dgsEditor.WidgetPropertiesMenu:setRowAsSection(rowSection,true)
-										end
-										local text = property..i
-										if DGSPropertyItemNames[property] then
-											text = DGSPropertyItemNames[property][i] or i
-										end
-										local row = dgsEditor.WidgetPropertiesMenu:addRow(row,text)
-										attach(targetElement,property,row,0,i) -- 0 the offset element
-									end
-								end
-							end
-						end
-					else
-						--Add a button to add a property
-						local row = dgsEditor.WidgetPropertiesMenu:addRow(row,property)
-						dgsEditor.WidgetPropertiesMenu:setRowAsSection(row,true)
-						dgsEditorAttachProperty.add(targetElement,property,row)
-						break
-					end
+				--If one argument
+				local arg = dgsListPropertyTypes(arguments)
+				local arg = arg[1] or arg[2]
+				local attach = dgsEditorAttachProperty[arg]
+				if attach then
+					local row = dgsEditor.WidgetPropertiesMenu:addRow(row,property)
+					dgsEditor.WidgetPropertiesMenu:setRowAsSection(row,true)
+					attach(targetElement,property,row,10)
 				end
 			end
 		end
@@ -788,6 +826,7 @@ function dgsEditorPropertiesMenuAttach(targetElement)
 end
 
 function dgsEditorPropertiesMenuDetach(keepPosition)
+	dgsEditor.WidgetPropertiesMain:setText("DGSProperties")
 	dgsEditor.WidgetPropertiesMenu:clearRow(_,keepPosition)
 	for _, child in pairs(dgsEditor.WidgetPropertiesMenu.children) do
 		--don't touch scrollbar
@@ -1023,6 +1062,7 @@ function dgsEditorCreateColorPicker()
 	--old/new color
 	local shader = dxCreateShader("client/alphaCircle.fx")
 	dxSetShaderValue(shader,"items",6)
+	dxSetShaderValue(shader,"radius",1)
 	local background = dgsEditor.WidgetColorMain
 		:dgsImage(300,190,80,80,shader,false)
 	addElementOutline(background)
