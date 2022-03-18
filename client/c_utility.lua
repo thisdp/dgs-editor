@@ -236,7 +236,10 @@ DGSPropertyItemNames = {
 	rowTextColor = {"colorNormal","colorHover","colorClick"},
 	rowTextPosOffset = {"offsetX","offsetY"},
 	rowTextSize = {"scaleX","scaleY"},
-	scrollBarLength = {"vertical","horizontal"},
+	scrollBarLength = {
+		{"vertical","number","relative"},
+		{"horizontal","number","relative"},
+	},
 	scrollBarState = {"vertical","horizontal"},
 	scrollSpeed = {"speed","relative"},
 	selectorImageColorLeft = {"colorNormal","colorHover","colorClick"},
