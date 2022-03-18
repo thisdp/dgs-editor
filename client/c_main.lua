@@ -674,7 +674,7 @@ dgsEditorAttachProperty = {
 			end
 		end
 		--iprint("COLOR",property,arg)
-		if not arg then arg = tocolor(0,0,0,0) end
+		if not arg or type(arg) == "table" then arg = tocolor(0,0,0,0) end
 		local r,g,b,a = fromcolor(arg,true)
 		local shader = dxCreateShader("client/alphaCircle.fx")
 		local imgBack = dgsEditor.WidgetPropertiesMenu
@@ -751,35 +751,34 @@ dgsEditorAttachProperty = {
 			:on("dgsMouseClickUp",function()
 				local values = {}
 				local propertyValues = dgsGetRegisteredProperties(targetElement:getType(),true)[property]
-				for t, args in pairs(propertyValues) do
-					if #propertyValues > 1 and propertyValues[#propertyValues] ~= 1 then
-						--If there are several arguments in arguments
-						values[t] = {}
-						if type(args) == "table" then
-							for i, arg in pairs(args) do
-								local arg = dgsListPropertyTypes(arg)
-								if type(arg) == "table" then arg = table.concat(arg) end
-								local value = false
+				for a, arguments in pairs(propertyValues) do
+					if type(arguments) == "table" then
+						if arguments[1] == 1 then break end
+						values[a] = {}
+						for b, args in pairs(arguments) do
+							if type(args) == "table" then
+								values[b] = {}
+								for c, arg in pairs(args) do
+									local arg = dgsListPropertyTypes(arg)
+									if type(arg) == "table" then arg = arg[2] or arg[1] end
+									local value
+									if arg == "Number" then value = 0 end
+									if arg == "Bool" then value = false end
+									if arg == "String" then value = "" end
+									if arg == "Color" then value = tocolor(0,0,0,255) end
+									if arg == "Text" then value = "" end
+									values[b][c] = value
+								end
+							else
+								local arg = dgsListPropertyTypes(args)
+								if type(arg) == "table" then arg = arg[2] or arg[1] end
+								local value
 								if arg == "Number" then value = 0 end
-								if arg == "Bool" then value = true end
+								if arg == "Bool" then value = false end
 								if arg == "String" then value = "" end
 								if arg == "Color" then value = tocolor(0,0,0,255) end
 								if arg == "Text" then value = "" end
-								values[t][i] = value
-							end
-						end
-					else
-						if type(args) == "table" then
-							for i, arg in pairs(args) do
-								local arg = dgsListPropertyTypes(arg)
-								if type(arg) == "table" then arg = table.concat(arg) end
-								local value = false
-								if arg == "Number" then value = 0 end
-								if arg == "Bool" then value = true end
-								if arg == "String" then value = "" end
-								if arg == "Color" then value = tocolor(0,0,0,255) end
-								if arg == "Text" then value = "" end
-								values[i] = value
+								values[b] = value
 							end
 						end
 					end
@@ -806,20 +805,38 @@ function dgsEditorPropertiesMenuAttach(targetElement)
 				--Сhecking whether this property is set
 				if targetElement[property] and type(targetElement[property]) == "table" and #targetElement[property] > 0 then
 					if #pTemplate > 1 and pTemplate[#pTemplate] ~= 1 then
-						--If there are several arguments in arguments
+						--If there are several arguments in the argument
 						for i, arg in pairs(arguments) do
-							local arg = dgsListPropertyTypes(arg)
-							local arg = arg[2] or arg[1]
-							local attach = dgsEditorAttachProperty[arg]
-							if attach then
-								--Add row section
-								local text = DGSPropertyItemNames[property] and DGSPropertyItemNames[property][t] or t
-								if i == 1 then
-									local rowSection = dgsEditor.WidgetPropertiesMenu:addRow(rowSection,property.." "..text[i])
-									dgsEditor.WidgetPropertiesMenu:setRowAsSection(rowSection,true)
+							if type(arg) == "table" then
+								for c, a in pairs(arg) do
+									local arg = dgsListPropertyTypes(a)
+									local arg = arg[2] or arg[1]
+									local attach = dgsEditorAttachProperty[arg]
+									if attach then
+										--Add row section
+										local text = DGSPropertyItemNames[property] and DGSPropertyItemNames[property][i] or i
+										if c == 1 then
+											local rowSection = dgsEditor.WidgetPropertiesMenu:addRow(rowSection,property.." "..(text[c] or ""))
+											dgsEditor.WidgetPropertiesMenu:setRowAsSection(rowSection,true)
+										end
+										local row = dgsEditor.WidgetPropertiesMenu:addRow(row,text[c+1])
+										attach(targetElement,property,row,0,text[i+c],c,i)
+									end
 								end
-								local row = dgsEditor.WidgetPropertiesMenu:addRow(row,text[i+1])
-								attach(targetElement,property,row,0,text[i+1],i,t)
+							else
+								local arg = dgsListPropertyTypes(arg)
+								local arg = arg[2] or arg[1]
+								local attach = dgsEditorAttachProperty[arg]
+								if attach then
+									--Add row section
+									local text = DGSPropertyItemNames[property] and DGSPropertyItemNames[property][t] or t
+									if i == 1 then
+										local rowSection = dgsEditor.WidgetPropertiesMenu:addRow(rowSection,property.." "..(text[i] or ""))
+										dgsEditor.WidgetPropertiesMenu:setRowAsSection(rowSection,true)
+									end
+									local row = dgsEditor.WidgetPropertiesMenu:addRow(row,text[i+1])
+									attach(targetElement,property,row,0,text[i+1],i,t)
+								end
 							end
 						end
 					else
