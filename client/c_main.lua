@@ -51,6 +51,9 @@ end)
 
 ------------------------------------------------------Main Panel
 function dgsEditorCreateMainPanel()
+	-- Actions stores
+	dgsEditor.Actions = {}
+	dgsEditor.ActionsRedo = {}
 	--Used to store created elements createed by user
 	dgsEditor.ElementList = {}
 	dgsEditor.Created = true
@@ -175,22 +178,31 @@ function dgsEditorCreateMainPanel()
 	--Properties Main
 	dgsEditor.WidgetPropertiesMain  = dgsEditor.BackGround:dgsWindow(sW-350,0,350,0.5*sH,{"DGSProperties"},false)
 		:setCloseButtonEnabled(false)
-		:setSizable(false)
+		--:setSizable(false)
 		:setMovable(false)
 		:setProperty("shadow",{1,1,0xFF000000})
 		:setProperty("titleColorBlur",false)
 		:setProperty("color",tocolor(0,0,0,128))
 		:setProperty("titleColor",tocolor(0,0,0,128))
 		:setProperty("textSize",{1.3,1.3})
+		:setProperty("minSize",{350,0.5*sH})
+		:setProperty("maxSize",{350,sH})
+		:setProperty("borderSize",10)
 
 	--Properties List
 	dgsEditor.WidgetPropertiesMenu = dgsEditor.WidgetPropertiesMain
-		:dgsGridList(0,0,350,0.5*sH-dgsEditor.WidgetPropertiesMain.titleHeight,false)
+		:dgsGridList(0,0,350,0.5*sH-dgsEditor.WidgetPropertiesMain.titleHeight-dgsEditor.WidgetPropertiesMain.borderSize,false)
 		:setProperty("columnHeight",0)
 		:setProperty("rowHeight",30)
 		:setProperty("sortEnabled",false)
 		:setProperty("scrollBarState",{nil,false})
 		:setProperty("rowTextPosOffset",{10,0})
+	
+	--Resize grid list
+	dgsEditor.WidgetPropertiesMain:on("dgsSizeChange",function()
+		local w,h = source:getSize()
+		dgsEditor.WidgetPropertiesMenu:setSize(w,h-source.titleHeight-source.borderSize)
+	end)
 
 	--set rows default color
 	local defaultRowColor = dgsEditor.WidgetPropertiesMenu.rowColor[1]
@@ -201,13 +213,15 @@ function dgsEditorCreateMainPanel()
 	
 	dgsEditor.Controller = dgsEditorCreateController(dgsEditor.Canvas)
 	dgsEditorCreateColorPicker()
+	dgsEditorCreateGenerateCode()
 end
 -----------------------------------------------------Element management
-function dgsEditorCreateElement(dgsType,...)
+function dgsEditorCreateElement(...)
 	local args = {...}
 --	if #arguments == 0 then
 	local createdElement
-	local x,y = args[1],args[2]
+	local dgsType,x,y,isCenter,w,h,properties,isAction = unpack(args)
+	if isCenter == nil then isCenter = true end
 	if dgsType == "dgs-dxbutton" then
 		createdElement = dgsEditor.Canvas:dgsButton(0,0,80,30,"Button",false)
 	elseif dgsType == "dgs-dximage" then
@@ -240,11 +254,15 @@ function dgsEditorCreateElement(dgsType,...)
 		createdElement = dgsEditor.Canvas:dgsWindow(0,0,100,100,"window",false)
 			:setMovable(false)
 			:setSizable(false)
-			:setProperty("ignoreTitle",true)
 	elseif dgsType == "dgs-dxtabpanel" then
 		createdElement = dgsEditor.Canvas:dgsTabPanel(0,0,100,100,false)
 	end
-	if x and y then createdElement:setPosition(x,y,false,true) end
+	if x and y then createdElement:setPosition(x,y,false,isCenter) end
+	if w and h then createdElement:setSize(w,h,false) end
+	if properties then
+		--todo settings properties
+		--iprint(properties)
+	end
 	createdElement.isCreatedByEditor = true
 	--When clicking the element
 	createdElement:on("dgsMouseClickDown",function(button,state)
@@ -278,6 +296,12 @@ function dgsEditorCreateElement(dgsType,...)
 	end)
 	--Record the element
 	dgsEditor.ElementList[createdElement.dgsElement] = createdElement
+	--if it's not an action
+	if not isAction then
+		--Add action
+		saveAction(dgsEditorDestroyElement,{createdElement},"destroyElement")
+	end
+	return createdElement
 end
 
 function dgsEditorControllerAttach(targetElement)
@@ -543,19 +567,7 @@ dgsEditorAttachProperty = {
 		dgsEditor.WidgetPropertiesMenu:dgsEdit(offset or 0,5,50,20,arg,false)
 			:attachToGridList(dgsEditor.WidgetPropertiesMenu,row,2)
 			:on("dgsTextChange",function()
-				local tempProperty = targetElement[property]
-				if t then
-					tempProperty[t][i] = tonumber(source:getText()) or tempProperty[t][i]
-					targetElement[property] = tempProperty
-				else
-					if i then
-						tempProperty[i] = tonumber(source:getText()) or tempProperty[i]
-						targetElement[property] = tempProperty
-					else
-						tempProperty = tonumber(source:getText()) or tempProperty
-						targetElement[property] = tempProperty
-					end
-				end
+				changeProperty(targetElement,property,tonumber(source:getText()),i,t)
 			end)
 	end,
 	Bool = function(targetElement,property,row,offset,text,i,t)
@@ -566,23 +578,7 @@ dgsEditorAttachProperty = {
 		dgsEditor.WidgetPropertiesMenu:dgsSwitchButton(offset or 0,5,50,20,"","",arg)
 			:attachToGridList(dgsEditor.WidgetPropertiesMenu,row,2)
 			:on("dgsSwitchButtonStateChange",function(state)
-				-- closeButton function
-				if property == "noCloseButton" then
-					targetElement:setCloseButtonEnabled(state)
-				end
-				local tempProperty = targetElement[property]
-				if t then
-					tempProperty[t][i] = state or tempProperty[t][i]
-					targetElement[property] = tempProperty
-				else
-					if i then
-						tempProperty[i] = state
-						targetElement[property] = tempProperty
-					else
-						tempProperty = state
-						targetElement[property] = tempProperty
-					end
-				end
+				changeProperty(targetElement,property,state,i,t)
 			end)
 	end,
 	String = function(targetElement,property,row,offset,text,i,t)
@@ -602,19 +598,7 @@ dgsEditorAttachProperty = {
 				end
 			end
 			combobox:on("dgsComboBoxSelect",function(row)
-				local tempProperty = targetElement[property]
-				if t then
-					tempProperty[t][i] = source:getItemText(row) or tempProperty[t][i]
-					targetElement[property] = tempProperty
-				else
-					if i then
-						tempProperty[i] = source:getItemText(row) or tempProperty[i]
-						targetElement[property] = tempProperty
-					else
-						tempProperty = source:getItemText(row) or tempProperty
-						targetElement[property] = tempProperty
-					end
-				end
+				changeProperty(targetElement,property,source:getItemText(row),i,t)
 			end)
 		elseif property:lower():find("font") then
 			--Font combobox
@@ -627,37 +611,13 @@ dgsEditorAttachProperty = {
 				end
 			end
 			combobox:on("dgsComboBoxSelect",function(row)
-				local tempProperty = targetElement[property]
-				if t then
-					tempProperty[t][i] = source:getItemText(row) or tempProperty[t][i]
-					targetElement[property] = tempProperty
-				else
-					if i then
-						tempProperty[i] = source:getItemText(row) or tempProperty[i]
-						targetElement[property] = tempProperty
-					else
-						tempProperty = source:getItemText(row) or tempProperty
-						targetElement[property] = tempProperty
-					end
-				end
+				changeProperty(targetElement,property,source:getItemText(row),i,t,"quotes")
 			end)
 		else
 			dgsEditor.WidgetPropertiesMenu:dgsEdit(offset or 0,5,150,20,arg,false)
 				:attachToGridList(dgsEditor.WidgetPropertiesMenu,row,2)
 				:on("dgsTextChange",function()
-					local tempProperty = targetElement[property]
-					if t then
-						tempProperty[t][i] = source:getItemText(row) or tempProperty[t][i]
-						targetElement[property] = tempProperty
-					else
-						if i then
-							tempProperty[i] = source:getItemText(row) or tempProperty[i]
-							targetElement[property] = tempProperty
-						else
-							tempProperty = source:getItemText(row) or tempProperty
-							targetElement[property] = tempProperty
-						end
-					end
+					changeProperty(targetElement,property,source:getItemText(row),i,t)
 				end)
 		end
 	end,
@@ -686,19 +646,7 @@ dgsEditorAttachProperty = {
 		dgsAddPropertyListener(circleImage,"color")
 		addEventHandler("onDgsPropertyChange",circleImage,function(key,newValue,oldValue)
 			if key == "color" then
-				local tempProperty = targetElement[property]
-				if t then
-					tempProperty[t][i] = tocolor(fromcolor(newValue,true)) or tempProperty[t][i]
-					targetElement[property] = tempProperty
-				else
-					if i then
-						tempProperty[i] = tocolor(fromcolor(newValue,true)) or tempProperty[i]
-						targetElement[property] = tempProperty
-					else
-						tempProperty = tocolor(fromcolor(newValue,true)) or tempProperty
-						targetElement[property] = tempProperty
-					end
-				end
+				changeProperty(targetElement,property,tocolor(fromcolor(newValue,true)),i,t,"color")
 			end
 		end)
 		local img = dgsEditor.WidgetPropertiesMenu
@@ -715,7 +663,6 @@ dgsEditorAttachProperty = {
 				dgsEditor.ColorPicker.childImage = source:getImage()
 				local r,g,b,a = fromcolor(dgsCircleGetColor(dgsEditor.ColorPicker.childImage),true)
 				dgsEditor.ColorPicker:setColor(r,g,b,a,"RGB")
-				dgsEditor.ColorPicker.oldColor = {r,g,b,a}
 				dgsSetProperty(dgsEditor.ColorPicker.oldImage.dgsElement,"color",tocolor(r,g,b,a))
 			end)
 		img:applyDetectArea(dgsEditor.DA)
@@ -729,19 +676,7 @@ dgsEditorAttachProperty = {
 		dgsEditor.WidgetPropertiesMenu:dgsEdit(offset or 0,5,150,20,arg,false)
 			:attachToGridList(dgsEditor.WidgetPropertiesMenu,row,2)
 			:on("dgsTextChange",function()
-				local tempProperty = targetElement[property]
-				if t then
-					tempProperty[t][i] = tocolor(fromcolor(newValue,true)) or tempProperty[t][i]
-					targetElement[property] = tempProperty
-				else
-					if i then
-						tempProperty[i] = source:getText() or tempProperty[i]
-						targetElement[property] = tempProperty
-					else
-						tempProperty = source:getText() or tempProperty
-						targetElement[property] = tempProperty
-					end
-				end
+				changeProperty(targetElement,property,source:getText(),i,t,"color")
 			end)
 	end,
 	add = function(targetElement,property,row,offset,text,i,t)
@@ -928,25 +863,9 @@ function dgsEditorPropertiesMenuDetach(keepPosition)
 	dgsEditor.WidgetPropertiesMenu:clearRow(_,keepPosition)
 	for _, child in pairs(dgsEditor.WidgetPropertiesMenu.children) do
 		--don't touch scrollbar
-		if child:getType() ~= "dgs-dxscrollbar" then
+		if not child.attachedToParent then
 			child:destroy()
 		end
-	end
-end
-
---destroy element
-function dgsEditorDestroyElement(element)
-	if element then
-		if element.children then
-			for _, child in pairs(element.children) do
-				dgsEditorDestroyElement(child)
-			end
-		end
-		dgsEditor.ElementList[element.dgsElement] = nil
-		element:destroy()
-		dgsEditor.Controller.BoundChild = nil
-		dgsEditorControllerDetach()
-		dgsEditor.Controller.visible = false
 	end
 end
 
@@ -965,14 +884,7 @@ function dgsEditorCreateColorPicker()
 	dgsEditor.WidgetColorMain:dgsImage(0,0,390,1,_,false,tocolor(0,0,0,255))
 
 	--Color Picker
-	dgsEditor.ColorPicker = dgsEditor.WidgetColorMain
-		:dgsColorPicker("HSVRing",10,10,160,160,false)
-		:on("dgsColorPickerChange",function()
-			if source.childImage then
-				--update circle color
-				dgsCircleSetColor(source.childImage,tocolor(source:getColor()))
-			end
-		end)
+	dgsEditor.ColorPicker = dgsEditor.WidgetColorMain:dgsColorPicker("HSVRing",10,10,160,160,false)
 
 	--RGB selectors
 	local RGB = {"R","G","B","A"}
@@ -1182,22 +1094,20 @@ function dgsEditorCreateColorPicker()
 	--confirm button
 	local btn = dgsEditor.WidgetColorMain:dgsButton(10,300,80,20,"confirm",false)
 		:on("dgsMouseClickUp",function()
+			if dgsEditor.ColorPicker.childImage then
+				local r,g,b,a = dgsEditor.ColorPicker:getColor()
+				dgsCircleSetColor(dgsEditor.ColorPicker.childImage,tocolor(r,g,b,a))
+			end
 			dgsEditor.WidgetColorMain.visible = false
 			dgsEditor.ColorPicker.childImage = nil
-			dgsEditor.ColorPicker.oldColor = nil
 		end)
 	addElementOutline(btn)
 
 	--cancel button
 	local btn = dgsEditor.WidgetColorMain:dgsButton(300,300,80,20,"cancel",false)
 		:on("dgsMouseClickUp",function()
-			if dgsEditor.ColorPicker.childImage and dgsEditor.ColorPicker.oldColor then
-				local r,g,b,a = unpack(dgsEditor.ColorPicker.oldColor)
-				dgsCircleSetColor(dgsEditor.ColorPicker.childImage,tocolor(r,g,b,a))
-			end
 			dgsEditor.WidgetColorMain.visible = false
 			dgsEditor.ColorPicker.childImage = nil
-			dgsEditor.ColorPicker.oldColor = nil
 		end)
 	addElementOutline(btn)
 			
@@ -1212,15 +1122,46 @@ function dgsEditorCreateColorPicker()
 			if dgsIsMouseWithinGUI(dgsEditor.WidgetColorMain.dgsElement) then
 				return
 			end
-			if dgsEditor.ColorPicker.childImage and dgsEditor.ColorPicker.oldColor then
-				local r,g,b,a = unpack(dgsEditor.ColorPicker.oldColor)
-				dgsCircleSetColor(dgsEditor.ColorPicker.childImage,tocolor(r,g,b,a))
-			end
 			dgsEditor.WidgetColorMain.visible = false
 			dgsEditor.ColorPicker.childImage = nil
-			dgsEditor.ColorPicker.oldColor = nil
 		end
 	end,true)
+end
+
+----------------Generation Code Menu
+function dgsEditorCreateGenerateCode()
+	dgsEditor.GenerateMain  = dgsEditor.BackGround:dgsWindow(0,sH-300,300,300,"Generate Code",false)
+		:setCloseButtonEnabled(false)
+		--:setSizable(false)
+		--:setMovable(false)
+		:setProperty("shadow",{1,1,0xFF000000})
+		:setProperty("titleColorBlur",false)
+		:setProperty("color",tocolor(0,0,0,128))
+		:setProperty("titleColor",tocolor(0,0,0,128))
+		:setProperty("textSize",{1.3,1.3})
+		:setProperty("minSize",{100,100})
+		--:setProperty("maxSize",{350,sH})
+		:setProperty("borderSize",10)
+
+	dgsEditor.CodeMemo = dgsEditor.GenerateMain:dgsMemo(10,10,280,300-dgsEditor.GenerateMain.titleHeight-dgsEditor.GenerateMain.borderSize*2-30,"",false)
+	
+	local btn = dgsEditor.GenerateMain:dgsButton(300-80-dgsEditor.GenerateMain.borderSize,300-20-dgsEditor.GenerateMain.titleHeight-dgsEditor.GenerateMain.borderSize,80,20,"generate",false)
+		:on("dgsMouseClickDown",function(btn,state)
+			if btn == "left" and state == "down" then
+				dgsEditor.CodeMemo:setText(generateCode())
+			end
+		end)
+	--Press G to generate the code
+	bindKey("G","down",function()
+		btn:simulateClick("left")
+	end)
+
+	--Resize childs
+	dgsEditor.GenerateMain:on("dgsSizeChange",function()
+		local w,h = source:getSize()
+		dgsEditor.CodeMemo:setSize(w-source.borderSize*2,h-source.titleHeight-source.borderSize*2-30)
+		btn:setPosition(w-80-source.borderSize,h-20-source.titleHeight-source.borderSize)
+	end)
 end
 
 ----------------Hot Key Controller
@@ -1262,6 +1203,45 @@ end
 addEventHandler("onClientKey",root,onClientKeyCheck)
 
 function onClientKeyTriggered(button)
+	--Undo/redo action
+	local shift = getKeyState("lshift") or getKeyState("rshift")
+	local ctrl = getKeyState("lctrl") or getKeyState("rctrl")
+	if ctrl and button == "z" then
+		if shift then
+			if dgsEditor.ActionsRedo and #dgsEditor.ActionsRedo > 0 then
+				local fnc,args = unpack(dgsEditor.ActionsRedo[1])
+				local dgsType,x,y,isCenter,w,h,properties = unpack(args)
+				table.remove(dgsEditor.ActionsRedo,1)
+				fnc(dgsType,x,y,isCenter,w,h,properties)
+			end
+		else
+			if dgsEditor.Actions and #dgsEditor.Actions > 0 then
+				local fnc,args,name = unpack(dgsEditor.Actions[1])
+				table.remove(dgsEditor.Actions,1)
+				if name == "destroyElement" then
+					local element = args[1]
+					if element:getType() ~= "destroyed element" then
+						if dgsEditor.Controller.BoundChild == element.dgsElement then
+							x,y = dgsEditor.Controller:getPosition(false)
+						else
+							x,y = element:getPosition(false)
+						end
+						local w,h = element:getSize(false)
+						table.insert(dgsEditor.ActionsRedo,1,{dgsEditorCreateElement,{element:getType(),x,y,false,w,h,false,true}})
+						fnc(element,true)
+					end
+				elseif name == "createElement" then
+					local type,x,y,w,h,properties = unpack(args)
+					local element = fnc(type,x,y,false,w,h,properties,true)
+					table.insert(dgsEditor.ActionsRedo,1,{dgsEditorDestroyElement,{element,true}})
+				elseif name == "cancelProperty" then
+					local element,property,oldValue,newValue = unpack(args)
+					fnc(element,property,oldValue,newValue)
+					--todo return property
+				end
+			end
+		end
+	end
 	if dgsEditor.Controller and dgsEditor.Controller.visible then
 		if button == "arrow_u" then
 			dgsEditor.Controller.position = dgsEditor.Controller.position.toVector+Vector2(0,-1)
@@ -1278,11 +1258,95 @@ function onClientKeyTriggered(button)
 		elseif button == "enter" then
 			--Confirm color picker
 			if dgsEditor.WidgetColorMain.visible then
+				if dgsEditor.ColorPicker.childImage then
+					local r,g,b,a = dgsEditor.ColorPicker:getColor()
+					dgsCircleSetColor(dgsEditor.ColorPicker.childImage,tocolor(r,g,b,a))
+				end
 				dgsEditor.WidgetColorMain.visible = false
 				dgsEditor.ColorPicker.childImage = nil
-				dgsEditor.ColorPicker.oldColor = nil
+			end			
+		end
+	end
+end
+
+--Save property changes 
+function changeProperty(element,property,newValue,i,t,type)
+	if property == "noCloseButton" then
+		element:setCloseButtonEnabled(newValue)
+	end
+	local tempValue = element[property]
+	local oldValue = tempValue
+	if t then
+		tempValue[t][i] = newValue or tempValue[t][i]
+	else
+		if i then
+			tempValue[i] = newValue or tempValue[i]
+		else
+			tempValue = newValue or tempValue
+		end
+	end
+	element[property] = tempValue
+	
+	local tempPropertyList = element.dgsEditorPropertyList
+	if not tempPropertyList then tempPropertyList = {} end
+	if type == "color" then
+		local r,g,b,a = fromcolor(newValue,true)
+		newValue = "tocolor("..r..", "..g..", "..b..", "..a..")"
+	elseif type == "quotes" then
+		newValue = "\""..newValue.."\""
+	end
+	tempPropertyList[property] = newValue
+	element.dgsEditorPropertyList = tempPropertyList
+	iprint(property,newValue,oldValue) -- new and old values should be different
+	saveAction(cancelProperty,{element,property,newValue,oldValue},"cancelProperty")
+end
+
+function cancelProperty(element,property,newValue,oldValue)
+	element[property] = oldValue
+	local tempPropertyList = element.dgsEditorPropertyList
+	if not tempPropertyList then tempPropertyList = {} end
+	tempPropertyList[property] = oldValue
+	element.dgsEditorPropertyList = tempPropertyList
+	dgsEditorPropertiesMenuDetach(true)
+	dgsEditorPropertiesMenuAttach(element)
+end
+
+--Save actions
+function saveAction(fnc,args,name)
+	table.insert(dgsEditor.Actions,1,{fnc,args,name})
+	if #dgsEditor.Actions > historyLimit then
+		table.remove(dgsEditor.Actions,#dgsEditor.Actions)
+	end
+end
+
+--destroy element
+function dgsEditorDestroyElement(element,isAction)
+	if element and element:getType() ~= "destroyed element" then
+		--if it's not an action
+		if not isAction then
+			if dgsEditor.Controller.BoundChild == element.dgsElement then
+				x,y = dgsEditor.Controller:getPosition(false)
+			else
+				x,y = element:getPosition(false)
+			end
+			local w,h = element:getSize(false)
+			saveAction(dgsEditorCreateElement,{element:getType(),x,y,w,h,element.dgsEditorPropertyList},"createElement")
+		end
+		if element.children then
+			for _, child in pairs(element.children) do
+				--if it is not an internal element
+				if not child.attachedToParent then
+					dgsEditorDestroyElement(child)
+				end
 			end
 		end
+		if element.dgsElement and dgsEditor.ElementList[element.dgsElement] then
+			dgsEditor.ElementList[element.dgsElement] = nil
+		end
+		element:destroy()
+		dgsEditor.Controller.BoundChild = nil
+		dgsEditorControllerDetach()
+		dgsEditor.Controller.visible = false
 	end
 end
 -----------------------------------------------------Start up

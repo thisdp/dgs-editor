@@ -144,6 +144,26 @@ function table.listKeys(tab)
 	end
 	return key
 end
+
+function serializeTable(val,skipnewlines,depth)
+	skipnewlines = skipnewlines or false
+	depth = depth or 0
+	local tmp = string.rep("", depth)
+	if type(val) == "table" then
+		tmp = tmp.."{"
+		for k, v in pairs(val) do
+			tmp =  tmp..serializeTable(v, skipnewlines, depth + 1)..(k ~= #val and "," or "")
+		end
+		tmp = tmp..string.rep("", depth).."}"
+	elseif type(val) == "number" then
+		tmp = tmp..tostring(val)
+	elseif type(val) == "string" then
+		tmp = tmp..string.format("%q", val)
+	elseif type(val) == "boolean" then
+		tmp = tmp..(val and "true" or "false")
+	end
+	return tmp
+end
 ------------------SVG
 outlineSVG = [[
 <svg width="100" height="30">
