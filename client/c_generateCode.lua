@@ -7,21 +7,23 @@ function generateCode()
 	local code = ""
 
 	for dgsElement, element in pairs(dgsEditor.ElementList) do
-		local c = generateCode_process(element, 1)
+		if element.isCreatedByEditor then
+			local c = generateCode_process(element, 1)
 
-		if c and c ~= "" then
-			local count = 1
-			while string.sub(c, -string.len("\n")) == "\n" do
-				c = string.sub(c, 0, #c - string.len("\n"))
+			if c and c ~= "" then
+				local count = 1
+				while string.sub(c, -string.len("\n")) == "\n" do
+					c = string.sub(c, 0, #c - string.len("\n"))
 
-				count = count + 1
-				if count > 10 then
-					break
+					count = count + 1
+					if count > 10 then
+						break
+					end
 				end
-			end
 
-			-- between each high level (screen) element
-			code = code..c..(i == #dgsEditor.ElementList and "" or "\n\n")
+				-- between each high level (screen) element
+				code = code..c..(i == #dgsEditor.ElementList and "" or "\n\n")
+			end
 		end
 	end
 
@@ -39,7 +41,7 @@ function generateCode_process(element)
 		local done = false
 
 		for _, child in ipairs(c) do
-			if not child.attachedToParent then
+			if child.isCreatedByEditor then
 				if not done then
 					code = code.."\n"
 					done = true
@@ -75,23 +77,6 @@ function generateCode_common(element)
 	common.elementType = elementType
 	common.variable = elementType.."[]"
 
-	local x, y = unpack(element.position)
-
-	if element.position.relative then
-		common.position = string.format(gNumberFormat..", "..gNumberFormat, x, y)
-	else
-		common.position = x..", "..y
-	end
-
-	local w, h = unpack(element.size)
-	if element.size.relative then
-		common.size = string.format(gNumberFormat..", "..gNumberFormat, w, h)
-	else
-		common.size = w..", "..h
-	end
-
-	common.relative = tostring(element.position.relative)
-
 	local text = element:getText()
 	if text then
 		common.text = text:gsub("\n", "\\n"):gsub("\"", "\\\"") or ""
@@ -116,6 +101,27 @@ function generateCode_common(element)
 			end
 		end
 	end
+
+	if dgsEditor.Controller.BoundChild == element.dgsElement then 
+		element = dgsEditor.Controller
+	end
+
+	local x, y = unpack(element.position)
+
+	if element.position.relative then
+		common.position = string.format(gNumberFormat..", "..gNumberFormat, x, y)
+	else
+		common.position = x..", "..y
+	end
+
+	local w, h = unpack(element.size)
+	if element.size.relative then
+		common.size = string.format(gNumberFormat..", "..gNumberFormat, w, h)
+	else
+		common.size = w..", "..h
+	end
+
+	common.relative = tostring(element.position.relative)
 
 	return common
 end

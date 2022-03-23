@@ -17,24 +17,28 @@ dgsEditor.ActionHistory = {
 dgsEditor.Action = {}
 dgsEditor.ActionFunctions = {
     destroy = function(action)
-		local element = unpack(action.arguments)
-        return dgsEditorDestroyElement(element,true)
+		local element,isAction = unpack(action.arguments)
+		if element then
+			return dgsEditorDestroyElement(element,isAction)
+		end
     end,
     show = function(action)
-		local element = unpack(action.arguments)
+		local element,isAction = unpack(action.arguments)
 		if element then
 			element.visible = true
-			element.editorVisible = true
+			element.isCreatedByEditor = true
 			if element.children then
 				for _, child in pairs(element.children) do
 					--if it is not an internal element
-					if not child.attachedToParent then
-						child.editorVisible = true
+					if child.isCreatedByEditor then
+						child.isCreatedByEditor = true
 					end
 				end
 			end
-			saveAction("destroy",{element})
-			return element
+			if isAction then
+				saveAction("destroy",{element,true})
+			end
+			return true
 		end
     end,
     --[[hide = function(action)
@@ -256,8 +260,7 @@ function dgsEditorCreateElement(...)
 	local args = {...}
 --	if #arguments == 0 then
 	local createdElement
-	local dgsType,x,y,isCenter,w,h,properties,isAction = unpack(args)
-	if isCenter == nil then isCenter = true end
+	local dgsType,x,y = unpack(args)
 	if dgsType == "dgs-dxbutton" then
 		createdElement = dgsEditor.Canvas:dgsButton(0,0,80,30,"Button",false)
 	elseif dgsType == "dgs-dximage" then
@@ -293,12 +296,7 @@ function dgsEditorCreateElement(...)
 	elseif dgsType == "dgs-dxtabpanel" then
 		createdElement = dgsEditor.Canvas:dgsTabPanel(0,0,100,100,false)
 	end
-	if x and y then createdElement:setPosition(x,y,false,isCenter) end
-	if w and h then createdElement:setSize(w,h,false) end
-	if properties then
-		--todo settings properties
-		--iprint(properties)
-	end
+	if x and y then createdElement:setPosition(x,y,false,true) end
 	createdElement.isCreatedByEditor = true
 	--When clicking the element
 	createdElement:on("dgsMouseClickDown",function(button,state)
@@ -332,11 +330,8 @@ function dgsEditorCreateElement(...)
 	end)
 	--Record the element
 	dgsEditor.ElementList[createdElement.dgsElement] = createdElement
-	--if it's not an action
-	if not isAction then
-		--Add action
-		saveAction("destroy",{createdElement})
-	end
+	--Add action
+	saveAction("destroy",{createdElement})
 	return createdElement
 end
 
@@ -890,7 +885,7 @@ function dgsEditorPropertiesMenuAttach(targetElement)
 		:setProperty("alignment",{"center","center"})
 		:attachToGridList(dgsEditor.WidgetPropertiesMenu,row,2)
 		:on("dgsMouseClickUp",function()
-			dgsEditorDestroyElement(targetElement)
+			dgsEditorDestroyElement(targetElement,true)
 		end)
 end
 
@@ -1248,14 +1243,22 @@ function onClientKeyTriggered(button)
 				local name,args = unpack(dgsEditor.ActionHistory.Redo[1])
 				table.remove(dgsEditor.ActionHistory.Redo,1)
 				dgsEditor.Action[name](unpack(args))
+				if name == "destroy" then
+					saveAction("show",args)
+				elseif name == "show" then
+					saveAction("destroy",args)
+				end
 			end
 		else
 			if dgsEditor.ActionHistory.Undo and #dgsEditor.ActionHistory.Undo > 0 then
 				local name,args = unpack(dgsEditor.ActionHistory.Undo[1])
 				table.remove(dgsEditor.ActionHistory.Undo,1)
+				--print("Remove action, count: "..#dgsEditor.ActionHistory.Undo)
 				dgsEditor.Action[name](unpack(args))
 				if name == "destroy" then
 					table.insert(dgsEditor.ActionHistory.Redo,1,{"show",args})
+				elseif name == "show" then
+					table.insert(dgsEditor.ActionHistory.Redo,1,{"destroy",args})
 				end
 			end
 		end
@@ -1271,7 +1274,7 @@ function onClientKeyTriggered(button)
 			dgsEditor.Controller.position = dgsEditor.Controller.position.toVector+Vector2(1,0)
 		elseif button == "delete" then
 			if dgsEditor.Controller.BoundChild then
-				dgsEditorDestroyElement(dgsGetInstance(dgsEditor.Controller.BoundChild))
+				dgsEditorDestroyElement(dgsGetInstance(dgsEditor.Controller.BoundChild),true)
 			end
 		elseif button == "enter" then
 			--Confirm color picker
@@ -1315,7 +1318,7 @@ function changeProperty(element,property,newValue,i,t,type)
 	end
 	tempPropertyList[property] = newValue
 	element.dgsEditorPropertyList = tempPropertyList
-	iprint(property,newValue,oldValue) -- new and old values should be different
+	--iprint(property,newValue,oldValue) -- new and old values should be different
 	saveAction(cancelProperty,{element,property,newValue,oldValue},"cancelProperty")
 end
 
@@ -1335,33 +1338,28 @@ function saveAction(name,args)
 	if #dgsEditor.ActionHistory.Undo > historyLimit then
 		table.remove(dgsEditor.ActionHistory.Undo,#dgsEditor.ActionHistory.Undo)
 	end
+	--print("Add action, count: "..#dgsEditor.ActionHistory.Undo)
 end
 
 --destroy element
 function dgsEditorDestroyElement(element,isAction)
 	if element then
-		--if it's not an action
-		if not isAction then
-			if dgsEditor.Controller.BoundChild == element.dgsElement then
-				x,y = dgsEditor.Controller:getPosition(false)
-			else
-				x,y = element:getPosition(false)
-			end
-			local w,h = element:getSize(false)
-			--saveAction(dgsEditorCreateElement,{element:getType(),x,y,w,h,element.dgsEditorPropertyList},"createElement")
+		--if save action
+		if isAction then
+			saveAction("show",{element})
 		end
 		if element.children then
 			for _, child in pairs(element.children) do
 				--if it is not an internal element
-				if not child.attachedToParent then
-					child.editorVisible = false
+				if child.isCreatedByEditor then
+					child.isCreatedByEditor = false
 				end
 			end
 		end
 		element.visible = false
-		element.editorVisible = false
-		dgsEditor.Controller.BoundChild = nil
+		element.isCreatedByEditor = false
 		dgsEditorControllerDetach()
+		dgsEditor.Controller.BoundChild = nil
 		dgsEditor.Controller.visible = false
 	end
 end
