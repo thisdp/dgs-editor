@@ -2,6 +2,7 @@ defaultLanguage = "en-us"
 dgsEditorSettings = {
 	UsingLanguage = defaultLanguage,
 }
+historyLimit = 5000
 
 function loadEditorSettings()
 	local settings = {}
