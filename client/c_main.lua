@@ -10,6 +10,7 @@
 ]]
 
 dgsEditor = {}
+historyActionState = 0 -- state history
 dgsEditor.ActionHistory = {
 	Undo = {},
 	Redo = {}
@@ -18,29 +19,48 @@ dgsEditor.Action = {}
 dgsEditor.ActionFunctions = {
     destroy = function(action)
 		local element = unpack(action.arguments)
-        return dgsEditorDestroyElement(element,true)
+		if element then
+			return dgsEditorDestroyElement(element)
+		end
     end,
     show = function(action)
 		local element = unpack(action.arguments)
 		if element then
 			element.visible = true
-			element.editorVisible = true
+			element.isCreatedByEditor = true
 			if element.children then
 				for _, child in pairs(element.children) do
 					--if it is not an internal element
-					if not child.attachedToParent then
-						child.editorVisible = true
+					if child.isCreatedByEditor then
+						child.isCreatedByEditor = true
 					end
 				end
 			end
-			saveAction("destroy",{element})
-			return element
+			return true
 		end
     end,
-    --[[hide = function(action)
-        action.previousValue = dgsGetProperty(unpack(action.arguments,1,2))
-        return dgsSetProperty(unpack(action.arguments))
-    end]]
+	cancelProperty = function(action)
+		local element,property,newValue,oldValue = unpack(action.arguments)
+		element[property] = oldValue
+		local tempPropertyList = element.dgsEditorPropertyList
+		if not tempPropertyList then tempPropertyList = {} end
+		tempPropertyList[property] = oldValue
+		element.dgsEditorPropertyList = tempPropertyList
+		dgsEditorPropertiesMenuDetach(true)
+		dgsEditorPropertiesMenuAttach(element)
+		return true
+	end,
+	returnProperty = function(action)
+		local element,property,newValue,oldValue = unpack(action.arguments)
+		element[property] = newValue
+		local tempPropertyList = element.dgsEditorPropertyList
+		if not tempPropertyList then tempPropertyList = {} end
+		tempPropertyList[property] = newValue
+		element.dgsEditorPropertyList = tempPropertyList
+		dgsEditorPropertiesMenuDetach(true)
+		dgsEditorPropertiesMenuAttach(element)
+		return true
+	end,
 }
 setmetatable(dgsEditor.Action,{__index = function(self, theIndex)
     return setmetatable({action=theIndex},{ __call = function(self,...)
@@ -107,22 +127,27 @@ function dgsEditorCreateMainPanel()
 		:setCloseButtonEnabled(false)
 		:setSizable(false)
 		:setMovable(false)
-		:setProperty("shadow",{1,1,0xFF000000})
-		:setProperty("titleColorBlur",false)
-		:setProperty("color",tocolor(0,0,0,128))
-		:setProperty("titleColor",tocolor(0,0,0,128))
-		:setProperty("textSize",{1.3,1.3})
+		:setProperties({
+			shadow = {1,1,0xFF000000},
+			titleColorBlur = false,
+			color = tocolor(0,0,0,128),
+			titleColor = tocolor(0,0,0,128),
+			textSize = {1.3,1.3},
+		})
 	--The Vertical Spliter Line
 	dgsEditor.WidgetSpliter = dgsEditor.WidgetMain
 		:dgsImage(80,0,5,0.5*sH-25,_,false,tocolor(50,50,50,200))
 	--Type List
 	dgsEditor.WidgetTypeList = dgsEditor.WidgetMain
 		:dgsGridList(0,0,80,200,false)
-		:setProperty("rowHeight",25)
-		:setProperty("columnHeight",0)
-		:setProperty("rowTextSize",{1.2,1.2})
-		:setProperty("bgColor",tocolor(0,0,0,0))
-		:setProperty("sortEnabled",false)
+		:setProperties({
+			rowHeight = 30,
+			columnHeight = 0,
+			rowTextSize = {1.2,1.2},
+			scrollBarThick = 10,
+			bgColor = tocolor(0,0,0,0),
+			sortEnabled = false,
+		})
 		:on("dgsGridListSelect",function(rNew,_,rOld,_)
 			if rOld ~= -1 then
 				
@@ -138,12 +163,14 @@ function dgsEditorCreateMainPanel()
 	--Widget List
 	dgsEditor.WidgetList = dgsEditor.WidgetMain
 		:dgsGridList(85,0,165,0.5*sH-25,false)
-		:setProperty("rowHeight",30)
-		:setProperty("columnHeight",0)
-		:setProperty("rowTextSize",{1.2,1.2})
-		:setProperty("scrollBarThick",10)
-		:setProperty("bgColor",tocolor(0,0,0,0))
-		:setProperty("sortEnabled",false)
+		:setProperties({
+			rowHeight = 30,
+			columnHeight = 0,
+			rowTextSize = {1.2,1.2},
+			scrollBarThick = 10,
+			bgColor = tocolor(0,0,0,0),
+			sortEnabled = false,
+		})
 		:on("dgsGridListSelect",function(rNew,_,rOld,_)
 			if rOld ~= -1 then
 
@@ -216,23 +243,26 @@ function dgsEditorCreateMainPanel()
 		:setCloseButtonEnabled(false)
 		--:setSizable(false)
 		:setMovable(false)
-		:setProperty("shadow",{1,1,0xFF000000})
-		:setProperty("titleColorBlur",false)
-		:setProperty("color",tocolor(0,0,0,128))
-		:setProperty("titleColor",tocolor(0,0,0,128))
-		:setProperty("textSize",{1.3,1.3})
-		:setProperty("minSize",{350,0.5*sH})
-		:setProperty("maxSize",{350,sH})
-		:setProperty("borderSize",10)
-
+		:setProperties({
+			shadow = {1,1,0xFF000000},
+			titleColorBlur = false,
+			color = tocolor(0,0,0,128),
+			titleColor = tocolor(0,0,0,128),
+			textSize = {1.3,1.3},
+			minSize = {350,0.5*sH},
+			maxSize = {350,sH},
+			borderSize = 10,
+		})
 	--Properties List
 	dgsEditor.WidgetPropertiesMenu = dgsEditor.WidgetPropertiesMain
 		:dgsGridList(0,0,350,0.5*sH-dgsEditor.WidgetPropertiesMain.titleHeight-dgsEditor.WidgetPropertiesMain.borderSize,false)
-		:setProperty("columnHeight",0)
-		:setProperty("rowHeight",30)
-		:setProperty("sortEnabled",false)
-		:setProperty("scrollBarState",{nil,false})
-		:setProperty("rowTextPosOffset",{10,0})
+		:setProperties({
+			columnHeight = 0,
+			rowHeight = 30,
+			sortEnabled = false,
+			scrollBarState = {nil,false},
+			rowTextPosOffset = {10,0},
+		})
 	
 	--Resize grid list
 	dgsEditor.WidgetPropertiesMain:on("dgsSizeChange",function()
@@ -256,8 +286,7 @@ function dgsEditorCreateElement(...)
 	local args = {...}
 --	if #arguments == 0 then
 	local createdElement
-	local dgsType,x,y,isCenter,w,h,properties,isAction = unpack(args)
-	if isCenter == nil then isCenter = true end
+	local dgsType,x,y = unpack(args)
 	if dgsType == "dgs-dxbutton" then
 		createdElement = dgsEditor.Canvas:dgsButton(0,0,80,30,"Button",false)
 	elseif dgsType == "dgs-dximage" then
@@ -293,12 +322,7 @@ function dgsEditorCreateElement(...)
 	elseif dgsType == "dgs-dxtabpanel" then
 		createdElement = dgsEditor.Canvas:dgsTabPanel(0,0,100,100,false)
 	end
-	if x and y then createdElement:setPosition(x,y,false,isCenter) end
-	if w and h then createdElement:setSize(w,h,false) end
-	if properties then
-		--todo settings properties
-		--iprint(properties)
-	end
+	if x and y then createdElement:setPosition(x,y,false,true) end
 	createdElement.isCreatedByEditor = true
 	--When clicking the element
 	createdElement:on("dgsMouseClickDown",function(button,state)
@@ -332,11 +356,8 @@ function dgsEditorCreateElement(...)
 	end)
 	--Record the element
 	dgsEditor.ElementList[createdElement.dgsElement] = createdElement
-	--if it's not an action
-	if not isAction then
-		--Add action
-		saveAction("destroy",{createdElement})
-	end
+	--Add action
+	saveAction("destroy",{createdElement})
 	return createdElement
 end
 
@@ -397,8 +418,10 @@ function dgsEditorCreateController(theCanvas)
 	local Ring = dgsCreateCircle(0.45,0.3,360)	--circles
 	dgsCircleSetColorOverwritten(Ring,false)
 	local Line = theCanvas:dgsLine(0,0,0,0,false,2,tocolor(255,0,0,255))	--the highlight line (controller)
-		:setProperty("childOutsideHit",true)
-		:setProperty("isController",true)
+		:setProperties({
+			childOutsideHit = true,
+			isController = true,
+		})
 	--When clicking the element
 	addEventHandler("onDgsMouseClickDown",root,function(button,state,mx,my)
 		--Check whether the clicked element is handled by the controller
@@ -429,8 +452,10 @@ function dgsEditorCreateController(theCanvas)
 	Line:addItem(0,1,0,0,_,_,true)
 	--8 circles controller creating and resizing function
 	local RightCenter = Line:dgsButton(-ctrlSize/2,0,ctrlSize,ctrlSize,"",false)
-		:setProperty("image",{Ring,Ring,Ring})
-		:setProperty("color",{predefColors.hlightN,predefColors.hlightH,predefColors.hlightC})
+		:setProperties({
+			image = {Ring,Ring,Ring},
+			color = {predefColors.hlightN,predefColors.hlightH,predefColors.hlightC},
+		})
 		:setPositionAlignment("right","center")
 		:on("dgsMouseClickDown",function(button,state,mx,my)
 			source.parent.startDGSPos = Vector2(source.parent:getPosition(false))
@@ -446,8 +471,10 @@ function dgsEditorCreateController(theCanvas)
 			end
 		end)
 	local CenterTop = Line:dgsButton(0,-ctrlSize/2,ctrlSize,ctrlSize,"",false)
-		:setProperty("image",{Ring,Ring,Ring})
-		:setProperty("color",{predefColors.hlightN,predefColors.hlightH,predefColors.hlightC})
+		:setProperties({
+			image = {Ring,Ring,Ring},
+			color = {predefColors.hlightN,predefColors.hlightH,predefColors.hlightC},
+		})
 		:setPositionAlignment("center","top")
 		:on("dgsMouseClickDown",function(button,state,mx,my)
 			source.parent.startDGSPos = Vector2(source.parent:getPosition(false))
@@ -464,8 +491,10 @@ function dgsEditorCreateController(theCanvas)
 			end
 		end)
 	local LeftTop = Line:dgsButton(-ctrlSize/2,-ctrlSize/2,ctrlSize,ctrlSize,"",false)
-		:setProperty("image",{Ring,Ring,Ring})
-		:setProperty("color",{predefColors.hlightN,predefColors.hlightH,predefColors.hlightC})
+		:setProperties({
+			image = {Ring,Ring,Ring},
+			color = {predefColors.hlightN,predefColors.hlightH,predefColors.hlightC},
+		})
 		:setPositionAlignment("left","top")
 		:on("dgsMouseClickDown",function(button,state,mx,my)
 			source.parent.startDGSPos = Vector2(source.parent:getPosition(false))
@@ -482,8 +511,10 @@ function dgsEditorCreateController(theCanvas)
 			end
 		end)
 	local LeftCenter = Line:dgsButton(-ctrlSize/2,0,ctrlSize,ctrlSize,"",false)
-		:setProperty("image",{Ring,Ring,Ring})
-		:setProperty("color",{predefColors.hlightN,predefColors.hlightH,predefColors.hlightC})
+		:setProperties({
+			image = {Ring,Ring,Ring},
+			color = {predefColors.hlightN,predefColors.hlightH,predefColors.hlightC},
+		})
 		:setPositionAlignment("left","center")
 		:on("dgsMouseClickDown",function(button,state,mx,my)
 			source.parent.startDGSPos = Vector2(source.parent:getPosition(false))
@@ -500,8 +531,10 @@ function dgsEditorCreateController(theCanvas)
 			end
 		end)
 	local LeftBottom = Line:dgsButton(-ctrlSize/2,-ctrlSize/2,ctrlSize,ctrlSize,"",false)
-		:setProperty("image",{Ring,Ring,Ring})
-		:setProperty("color",{predefColors.hlightN,predefColors.hlightH,predefColors.hlightC})
+		:setProperties({
+			image = {Ring,Ring,Ring},
+			color = {predefColors.hlightN,predefColors.hlightH,predefColors.hlightC},
+		})
 		:setPositionAlignment("left","bottom")
 		:on("dgsMouseClickDown",function(button,state,mx,my)
 			source.parent.startDGSPos = Vector2(source.parent:getPosition(false))
@@ -518,8 +551,10 @@ function dgsEditorCreateController(theCanvas)
 			end
 		end)
 	local CenterBottom = Line:dgsButton(0,-ctrlSize/2,ctrlSize,ctrlSize,"",false)
-		:setProperty("image",{Ring,Ring,Ring})
-		:setProperty("color",{predefColors.hlightN,predefColors.hlightH,predefColors.hlightC})
+		:setProperties({
+			image = {Ring,Ring,Ring},
+			color = {predefColors.hlightN,predefColors.hlightH,predefColors.hlightC},
+		})
 		:setPositionAlignment("center","bottom")
 		:on("dgsMouseClickDown",function(button,state,mx,my)
 			source.parent.startDGSPos = Vector2(source.parent:getPosition(false))
@@ -534,8 +569,10 @@ function dgsEditorCreateController(theCanvas)
 			end
 		end)
 	local RightBottom = Line:dgsButton(-ctrlSize/2,-ctrlSize/2,ctrlSize,ctrlSize,"",false)
-		:setProperty("image",{Ring,Ring,Ring})
-		:setProperty("color",{predefColors.hlightN,predefColors.hlightH,predefColors.hlightC})
+		:setProperties({
+			image = {Ring,Ring,Ring},
+			color = {predefColors.hlightN,predefColors.hlightH,predefColors.hlightC},
+		})
 		:setPositionAlignment("right","bottom")
 		:on("dgsMouseClickDown",function(button,state,mx,my)
 			source.parent.startDGSPos = Vector2(source.parent:getPosition(false))
@@ -551,8 +588,10 @@ function dgsEditorCreateController(theCanvas)
 			end
 		end)
 	local RightTop = Line:dgsButton(-ctrlSize/2,-ctrlSize/2,ctrlSize,ctrlSize,"",false)
-		:setProperty("image",{Ring,Ring,Ring})
-		:setProperty("color",{predefColors.hlightN,predefColors.hlightH,predefColors.hlightC})
+		:setProperties({
+			image = {Ring,Ring,Ring},
+			color = {predefColors.hlightN,predefColors.hlightH,predefColors.hlightC},
+		})
 		:setPositionAlignment("right","top")
 		:on("dgsMouseClickDown",function(button,state,mx,my)
 			source.parent.startDGSPos = Vector2(source.parent:getPosition(false))
@@ -754,7 +793,7 @@ dgsEditorAttachProperty = {
 						end
 					end
 				end
-				targetElement[property] = values
+				changeProperty(targetElement,property,values)
 				values = nil
 				dgsEditorPropertiesMenuDetach(true)
 				dgsEditorPropertiesMenuAttach(targetElement)
@@ -890,7 +929,7 @@ function dgsEditorPropertiesMenuAttach(targetElement)
 		:setProperty("alignment",{"center","center"})
 		:attachToGridList(dgsEditor.WidgetPropertiesMenu,row,2)
 		:on("dgsMouseClickUp",function()
-			dgsEditorDestroyElement(targetElement)
+			dgsEditorDestroyElement(targetElement,true)
 		end)
 end
 
@@ -910,12 +949,14 @@ function dgsEditorCreateColorPicker()
 	dgsEditor.WidgetColorMain = dgsEditor.BackGround:dgsWindow(0,0,390,350,"",false)
 		:setCloseButtonEnabled(false)
 		:setSizable(false)
-		:setMovable(false)
-		:setProperty("shadow",{1,1,0xFF000000})
-		:setProperty("titleColorBlur",false)
-		:setProperty("color",tocolor(69,69,69,255))
-		:setProperty("titleColor",tocolor(69,69,69,255))
-		:setProperty("textSize",{1.3,1.3})
+		--:setMovable(false)
+		:setProperties({
+			shadow = {1,1,0xFF000000},
+			titleColorBlur = false,
+			color = tocolor(69,69,69,255),
+			titleColor = tocolor(69,69,69,255),
+			textSize = {1.2,1.2},
+		})
 	
 	dgsEditor.WidgetColorMain:dgsImage(0,0,390,1,_,false,tocolor(0,0,0,255))
 
@@ -937,8 +978,10 @@ function dgsEditorCreateColorPicker()
 				end)
 			addElementOutline(edit)
 			local btnUp = edit:dgsButton(0.6,0,0.4,0.5," ▲",true)
-				:setProperty("alignment",{"center","center"})
-				:setProperty("textSize",{0.7,0.7})
+				:setProperties({
+					alignment = {"center","center"},
+					textSize = {0.7,0.7},
+				})
 				:on("dgsMouseClickDown",function()
 					local arg = tonumber(source.parent:getText()) or 0
 					local arg = arg + 1
@@ -947,8 +990,10 @@ function dgsEditorCreateColorPicker()
 				end)
 			addElementOutline(btnUp)
 			local btnDown = edit:dgsButton(0.6,0.5,0.4,0.5," ▼",true)
-				:setProperty("alignment",{"center","center"})
-				:setProperty("textSize",{0.7,0.7})
+				:setProperties({
+					alignment = {"center","center"},
+					textSize = {0.7,0.7},
+				})
 				:on("dgsMouseClickDown",function()
 					local arg = tonumber(source.parent:getText()) or 0
 					local arg = arg - 1
@@ -984,8 +1029,10 @@ function dgsEditorCreateColorPicker()
 			end)
 		addElementOutline(edit)
 		local btnUp = edit:dgsButton(0.6,0,0.4,0.5," ▲",true)
-			:setProperty("alignment",{"center","center"})
-			:setProperty("textSize",{0.7,0.7})
+			:setProperties({
+				alignment = {"center","center"},
+				textSize = {0.7,0.7},
+			})
 			:on("dgsMouseClickDown",function()
 				local arg = tonumber(source.parent:getText()) or 0
 				local arg = arg + 1
@@ -994,8 +1041,10 @@ function dgsEditorCreateColorPicker()
 			end)
 		addElementOutline(btnUp)
 		local btnDown = edit:dgsButton(0.6,0.5,0.4,0.5," ▼",true)
-			:setProperty("alignment",{"center","center"})
-			:setProperty("textSize",{0.7,0.7})
+			:setProperties({
+				alignment = {"center","center"},
+				textSize = {0.7,0.7},
+			})
 			:on("dgsMouseClickDown",function()
 				local arg = tonumber(source.parent:getText()) or 0
 				local arg = arg - 1
@@ -1025,8 +1074,10 @@ function dgsEditorCreateColorPicker()
 			end)
 		addElementOutline(edit)
 		local btnUp = edit:dgsButton(0.6,0,0.4,0.5," ▲",true)
-			:setProperty("alignment",{"center","center"})
-			:setProperty("textSize",{0.7,0.7})
+			:setProperties({
+				alignment = {"center","center"},
+				textSize = {0.7,0.7},
+			})
 			:on("dgsMouseClickDown",function()
 				local arg = tonumber(source.parent:getText()) or 0
 				local arg = arg + 1
@@ -1039,8 +1090,10 @@ function dgsEditorCreateColorPicker()
 			end)
 		addElementOutline(btnUp)
 		local btnDown = edit:dgsButton(0.6,0.5,0.4,0.5," ▼",true)
-			:setProperty("alignment",{"center","center"})
-			:setProperty("textSize",{0.7,0.7})
+			:setProperties({
+				alignment = {"center","center"},
+				textSize = {0.7,0.7},
+			})
 			:on("dgsMouseClickDown",function()
 				local arg = tonumber(source.parent:getText()) or 0
 				local arg = arg - 1
@@ -1074,8 +1127,10 @@ function dgsEditorCreateColorPicker()
 			end)
 		addElementOutline(edit)
 		local btnUp = edit:dgsButton(0.6,0,0.4,0.5," ▲",true)
-			:setProperty("alignment",{"center","center"})
-			:setProperty("textSize",{0.7,0.7})
+			:setProperties({
+				alignment = {"center","center"},
+				textSize = {0.7,0.7},
+			})
 			:on("dgsMouseClickDown",function()
 				local arg = tonumber(source.parent:getText()) or 0
 				local arg = arg + 1
@@ -1088,8 +1143,10 @@ function dgsEditorCreateColorPicker()
 			end)
 		addElementOutline(btnUp)
 		local btnDown = edit:dgsButton(0.6,0.5,0.4,0.5," ▼",true)
-			:setProperty("alignment",{"center","center"})
-			:setProperty("textSize",{0.7,0.7})
+			:setProperties({
+				alignment = {"center","center"},
+				textSize = {0.7,0.7},
+			})
 			:on("dgsMouseClickDown",function()
 				local arg = tonumber(source.parent:getText()) or 0
 				local arg = arg - 1
@@ -1168,16 +1225,15 @@ end
 function dgsEditorCreateGenerateCode()
 	dgsEditor.GenerateMain  = dgsEditor.BackGround:dgsWindow(0,sH-300,300,300,"Generate Code",false)
 		:setCloseButtonEnabled(false)
-		--:setSizable(false)
-		--:setMovable(false)
-		:setProperty("shadow",{1,1,0xFF000000})
-		:setProperty("titleColorBlur",false)
-		:setProperty("color",tocolor(0,0,0,128))
-		:setProperty("titleColor",tocolor(0,0,0,128))
-		:setProperty("textSize",{1.3,1.3})
-		:setProperty("minSize",{100,100})
-		--:setProperty("maxSize",{350,sH})
-		:setProperty("borderSize",10)
+		:setProperties({
+			shadow = {1,1,0xFF000000},
+			titleColorBlur = false,
+			color = tocolor(0,0,0,128),
+			titleColor = tocolor(0,0,0,128),
+			textSize = {1.2,1.2},
+			minSize = {100,100},
+			borderSize = 10,
+		})
 
 	dgsEditor.CodeMemo = dgsEditor.GenerateMain:dgsMemo(10,10,280,300-dgsEditor.GenerateMain.titleHeight-dgsEditor.GenerateMain.borderSize*2-30,"",false)
 	
@@ -1245,17 +1301,30 @@ function onClientKeyTriggered(button)
 	if ctrl and button == "z" then
 		if shift then
 			if dgsEditor.ActionHistory.Redo and #dgsEditor.ActionHistory.Redo > 0 then
+				historyActionState = historyActionState - 1
 				local name,args = unpack(dgsEditor.ActionHistory.Redo[1])
 				table.remove(dgsEditor.ActionHistory.Redo,1)
 				dgsEditor.Action[name](unpack(args))
+				if name == "destroy" then
+					saveAction("show",args,true)
+				elseif name == "show" then
+					saveAction("destroy",args,true)
+				elseif name == "returnProperty" then
+					saveAction("cancelProperty",args,true)
+				end
 			end
 		else
 			if dgsEditor.ActionHistory.Undo and #dgsEditor.ActionHistory.Undo > 0 then
+				historyActionState = historyActionState + 1
 				local name,args = unpack(dgsEditor.ActionHistory.Undo[1])
 				table.remove(dgsEditor.ActionHistory.Undo,1)
 				dgsEditor.Action[name](unpack(args))
 				if name == "destroy" then
 					table.insert(dgsEditor.ActionHistory.Redo,1,{"show",args})
+				elseif name == "show" then
+					table.insert(dgsEditor.ActionHistory.Redo,1,{"destroy",args})
+				elseif name == "cancelProperty" then
+					table.insert(dgsEditor.ActionHistory.Redo,1,{"returnProperty",args})
 				end
 			end
 		end
@@ -1271,7 +1340,7 @@ function onClientKeyTriggered(button)
 			dgsEditor.Controller.position = dgsEditor.Controller.position.toVector+Vector2(1,0)
 		elseif button == "delete" then
 			if dgsEditor.Controller.BoundChild then
-				dgsEditorDestroyElement(dgsGetInstance(dgsEditor.Controller.BoundChild))
+				dgsEditorDestroyElement(dgsGetInstance(dgsEditor.Controller.BoundChild),true)
 			end
 		elseif button == "enter" then
 			--Confirm color picker
@@ -1293,17 +1362,18 @@ function changeProperty(element,property,newValue,i,t,type)
 		element:setCloseButtonEnabled(newValue)
 	end
 	local tempValue = element[property]
-	local oldValue = tempValue
+	local oldValue = element[property]
 	if t then
 		tempValue[t][i] = newValue or tempValue[t][i]
 	else
 		if i then
 			tempValue[i] = newValue or tempValue[i]
 		else
-			tempValue = newValue or tempValue
+			tempValue = newValue
 		end
 	end
 	element[property] = tempValue
+	local newValue = element[property]
 	
 	local tempPropertyList = element.dgsEditorPropertyList
 	if not tempPropertyList then tempPropertyList = {} end
@@ -1315,22 +1385,17 @@ function changeProperty(element,property,newValue,i,t,type)
 	end
 	tempPropertyList[property] = newValue
 	element.dgsEditorPropertyList = tempPropertyList
-	iprint(property,newValue,oldValue) -- new and old values should be different
-	saveAction(cancelProperty,{element,property,newValue,oldValue},"cancelProperty")
-end
-
-function cancelProperty(element,property,newValue,oldValue)
-	element[property] = oldValue
-	local tempPropertyList = element.dgsEditorPropertyList
-	if not tempPropertyList then tempPropertyList = {} end
-	tempPropertyList[property] = oldValue
-	element.dgsEditorPropertyList = tempPropertyList
-	dgsEditorPropertiesMenuDetach(true)
-	dgsEditorPropertiesMenuAttach(element)
+	saveAction("cancelProperty",{element,property,newValue,oldValue})
 end
 
 --Save actions
-function saveAction(name,args)
+function saveAction(name,args,isAction)
+	if not isAction then
+		if historyActionState > 0 then
+			historyActionState = 0 -- reset state
+			dgsEditor.ActionHistory.Redo = {} -- clear redo actions
+		end
+	end
 	table.insert(dgsEditor.ActionHistory.Undo,1,{name,args})
 	if #dgsEditor.ActionHistory.Undo > historyLimit then
 		table.remove(dgsEditor.ActionHistory.Undo,#dgsEditor.ActionHistory.Undo)
@@ -1340,28 +1405,22 @@ end
 --destroy element
 function dgsEditorDestroyElement(element,isAction)
 	if element then
-		--if it's not an action
-		if not isAction then
-			if dgsEditor.Controller.BoundChild == element.dgsElement then
-				x,y = dgsEditor.Controller:getPosition(false)
-			else
-				x,y = element:getPosition(false)
-			end
-			local w,h = element:getSize(false)
-			--saveAction(dgsEditorCreateElement,{element:getType(),x,y,w,h,element.dgsEditorPropertyList},"createElement")
+		--if save action
+		if isAction then
+			saveAction("show",{element})
 		end
 		if element.children then
 			for _, child in pairs(element.children) do
 				--if it is not an internal element
-				if not child.attachedToParent then
-					child.editorVisible = false
+				if child.isCreatedByEditor then
+					child.isCreatedByEditor = false
 				end
 			end
 		end
 		element.visible = false
-		element.editorVisible = false
-		dgsEditor.Controller.BoundChild = nil
+		element.isCreatedByEditor = false
 		dgsEditorControllerDetach()
+		dgsEditor.Controller.BoundChild = nil
 		dgsEditor.Controller.visible = false
 	end
 end
