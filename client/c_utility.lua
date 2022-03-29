@@ -145,25 +145,6 @@ function table.listKeys(tab)
 	return key
 end
 
-function serializeTable(val,skipnewlines,depth)
-	skipnewlines = skipnewlines or false
-	depth = depth or 0
-	local tmp = string.rep("", depth)
-	if type(val) == "table" then
-		tmp = tmp.."{"
-		for k, v in pairs(val) do
-			tmp =  tmp..serializeTable(v, skipnewlines, depth + 1)..(k ~= #val and "," or "")
-		end
-		tmp = tmp..string.rep("", depth).."}"
-	elseif type(val) == "number" then
-		tmp = tmp..tostring(val)
-	elseif type(val) == "string" then
-		tmp = tmp..string.format("%q", val)
-	elseif type(val) == "boolean" then
-		tmp = tmp..(val and "true" or "false")
-	end
-	return tmp
-end
 ------------------SVG
 outlineSVG = [[
 <svg width="100" height="30">
@@ -177,6 +158,7 @@ function addElementOutline(element,offset)
 	local svg = dgsSVG(element.size.w+offset*2,element.size.h+offset*2,outlineSVG)
 	element:dgsImage(-offset,-offset,element.size.w+offset*2,element.size.h+offset*2,svg,false)
 		:setEnabled(false)
+		:attachToAutoDestroy(svg)
 end
 ------------------Events
 
@@ -291,4 +273,9 @@ fonts = {"default","default-bold","clear","arial","sans","pricedown","bankgothic
 alignments = {
 	alignX = {"left","center","right"},
 	alignY = {"top","center","bottom"},
+}
+-- 1-name, 2-arg
+columnData = {
+	{"text","String"},{"width","Number"},{"allWidthFront","Number"},{"alignment","String"}, -- default
+	{"color","Color"},{"colorCoded","Bool"},{"sizeX","Number"},{"sizeY","Number"},{"font","String"} -- nil
 }

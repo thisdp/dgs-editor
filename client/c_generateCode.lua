@@ -2,9 +2,13 @@ loadstring(exports.dgs:dgsImportOOPClass())()
 
 gDecimalPlaces = 2
 gNumberFormat = "%."..tostring(gDecimalPlaces).."f"
+--exceptions for properties
+gExceptions = {"absPos","absSize","rltPos","rltSize","isHorizontal","state"}
+gTableName = "dgs"
 
 function generateCode()
 	local code = ""
+	variables = {}
 
 	for dgsElement, element in pairs(dgsEditor.ElementList) do
 		if element.isCreatedByEditor then
@@ -25,6 +29,17 @@ function generateCode()
 				code = code..c..(i == #dgsEditor.ElementList and "" or "\n\n")
 			end
 		end
+	end
+
+	if table.count(variables) > 0 then
+		local prefix = gTableName.." = {\n"
+
+		for type, _ in pairs(variables) do
+			prefix = prefix.."    "..type.." = {},\n"
+		end
+		local prefix = prefix.."}\n"
+
+		code = prefix..code
 	end
 
 	return code
@@ -63,19 +78,22 @@ function generateCode_element(element)
 	local elementType = element:getType():sub(5)
 
 	if generateCodeWidget[elementType] then
-		local code = "\n"..generateCodeWidget[elementType](element, generateCode_common(element))
+		local code = "\n"..generateCodeWidget[elementType](element, generateCode_common(element,elementType:sub(3)))
 		return code
 	end
 
 	return ""
 end
 
-function generateCode_common(element)
+function generateCode_common(element,elementType)
 	local common = {}
-	local elementType = element:getType()
 
-	common.elementType = elementType
-	common.variable = elementType.."[]"
+	if not variables[elementType] then
+		variables[elementType] = 1
+	end
+	local variable = variables[elementType] or 0
+	common.variable = gTableName.."."..elementType.."["..variable.."]"
+	variables[elementType] = variable + 1
 
 	local text = element:getText()
 	if text then
@@ -95,9 +113,24 @@ function generateCode_common(element)
 
 	if properties then 
 		for property, value in pairs(properties) do
-			if property ~= "text" and property ~= "absPos" and property ~= "absSize" and property ~= "rltPos" and property ~= "rltSize" then
-				if type(value) == "table" then value = serializeTable(value,true) end
-				common.propertiesString = common.propertiesString.."\ndgsSetProperty("..common.variable..", \""..property.."\", "..tostring(value)..")"
+			if not table.find(gExceptions,property) then
+				local propertyValues = unpack(dgsGetRegisteredProperties(element:getType(),true)[property])
+				-- Find color argument
+				if type(propertyValues) ~= "table" and tostring(propertyValues):find(128) then
+					local r,g,b,a = fromcolor(value,true)
+					value = "tocolor("..r..", "..g..", "..b..", "..a..")"
+				end
+				if type(propertyValues) == "table" then
+					for i, v in pairs(propertyValues) do
+						if type(v) ~= "table" and tostring(v):find(128) then
+							local r,g,b,a = fromcolor(value[i],true)
+							value[i] = "tocolor("..r..", "..g..", "..b..", "..a..")"
+						end
+					end
+				end
+				local value = inspect(value)
+				local value = value:gsub("{ ","{"):gsub(" }","}"):gsub('"tocolor','tocolor'):gsub('%)"',')')
+				common.propertiesString = common.propertiesString.."\ndgsSetProperty("..common.variable..", \""..property.."\", "..value..")"
 			end
 		end
 	end
@@ -135,7 +168,8 @@ generateCodeWidget = {
 		return output
 	end,
 	dxcheckbox = function(element, common)
-		local output = common.variable.." = dgsCreateCheckBox("..common.position..", "..common.size..", \""..common.text.."\", "..tostring(element:getSelected())..", "..common.relative..common.parent
+		local select = tostring(element:getSelected())
+		local output = common.variable.." = dgsCreateCheckBox("..common.position..", "..common.size..", \""..common.text.."\", "..select..", "..common.relative..common.parent
 
 		output = output..common.propertiesString
 
@@ -156,7 +190,8 @@ generateCodeWidget = {
 		return output
 	end,
 	dximage = function(element, common)
-		local output = common.variable.." = dgsCreateImage("..common.position..", "..common.size..", image, "..common.relative..common.parent
+		local image = "image" -- path
+		local output = common.variable.." = dgsCreateImage("..common.position..", "..common.size..", "..image..", "..common.relative..common.parent
 
 		output = output..common.propertiesString
 
@@ -199,7 +234,7 @@ generateCodeWidget = {
 	end,
 	dxscrollbar = function(element, common)
 		local vertical = tostring(element.isHorizontal)
-		local output = common.variable.." = dgsCreateScrollBar("..common.position..", "..common.size..", "..(vertical and "false" or "true")..", "..common.relative..common.parent
+		local output = common.variable.." = dgsCreateScrollBar("..common.position..", "..common.size..", "..vertical..", "..common.relative..common.parent
 
 		output = output..common.propertiesString
 
