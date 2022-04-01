@@ -80,6 +80,9 @@ predefColors = {
 	hlightC = tocolor(3,114,239,200),
 }
 
+--Background window color
+backgroundColor = tocolor(69,69,69,255)
+
 ------------------Table
 --t1<--t2
 function table.deepcopy(obj)
@@ -145,20 +148,24 @@ function table.listKeys(tab)
 	return key
 end
 
-------------------SVG
-outlineSVG = [[
-<svg width="100" height="30">
-	<rect width="100%" height="100%" style="fill-opacity:0;stroke-width:3;stroke:black;" />
-</svg>
-]]
-
-function addElementOutline(element,offset)
+------------------Custom SVG outline
+function addElementOutline(element,offset,width)
 	local offset = offset or 1
+	local width = width or 1
 	element.size.relative = false
-	local svg = dgsSVG(element.size.w+offset*2,element.size.h+offset*2,outlineSVG)
-	element:dgsImage(-offset,-offset,element.size.w+offset*2,element.size.h+offset*2,svg,false)
-		:setEnabled(false)
+	local svg = dgsSVG(element.size.w+offset*2,element.size.h+offset*2)
+	local doc = svg:getDocument()
+	local rect = doc:rect(0,0,element.size.w+offset*2,element.size.h+offset*2)
+		:stroke({width=width,color="black"})
+	rect["fill-opacity"] = 0
+	local outline = element:dgsImage(-offset,-offset,element.size.w+offset*2,element.size.h+offset*2,svg,false)
 		:attachToAutoDestroy(svg)
+		:setEnabled(false)
+	--Resize outline
+	element:on("dgsSizeChange",function()
+		local w,h = source:getSize()
+		outline:setSize(w+offset*2,h+offset*2)
+	end)
 end
 ------------------Events
 
@@ -183,6 +190,11 @@ DGSTypeReference = {
 	{"dgs-dxswitchbutton","DGSSwitchButton"},
 	{"dgs-dxtabpanel","DGSTabPanel"},
 	{"dgs-dxwindow","DGSWindow"},
+}
+
+DGSEditorMenuReference = {
+	{"DGSGCode","GenerateMain"},
+	{"DGSTexture","TexturesMain"},
 }
 
 DGSPropertyItemNames = {
@@ -278,4 +290,8 @@ alignments = {
 columnData = {
 	{"text","String"},{"width","Number"},{"allWidthFront","Number"},{"alignment","String"}, -- default
 	{"color","Color"},{"colorCoded","Bool"},{"sizeX","Number"},{"sizeY","Number"},{"font","String"} -- nil
+}
+
+rowData = {
+	{}
 }
