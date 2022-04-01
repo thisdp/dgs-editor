@@ -3,7 +3,7 @@
 	Short Name: DGS Editor
 	Language:	Lua
 	Platform:	MTASA
-	Author:		thisdp
+	Author:		YappiDoor, thisdp
 	License: 	DPL v1 (The same as DGS)
 	State:		OpenSourced
 	Note:		This script uses the OOP syntax of DGS
