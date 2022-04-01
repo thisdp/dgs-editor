@@ -1,8 +1,9 @@
 --The syntax of this file is Lua Table.
+Languages			=	"Languages";
 Language			=	"en-us";		--language abbreviate
 LanguageDetail		=	"English US";	--language full name
 DGSWidgets			=	"DGS Widgets";
-DGSPropertyList		=	"DGS Property List";
+DGSProperties		=	"DGS Property List";
 Basic				=	"Basic";
 Plugins				=	"Plugins";
 DGSButton			=	"Button";

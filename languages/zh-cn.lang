@@ -1,13 +1,15 @@
 --The syntax of this file is Lua Table.
+Languages			=	"语言";
 Language			=	"zh-cn";		--language abbreviate
 LanguageDetail		=	"简体中文";		--language full name
 DGSWidgets			=	"DGS控件";
-DGSPropertyList		=	"DGS属性列表";
+DGSProperties		=	"DGS属性列表";
 Basic				=	"基础控件";
 Plugins				=	"插件";
 DGSButton			=	"按钮";
 DGSCheckBox			=	"复选框";
 DGSComboBox			=	"组合框";
+DGSEdit				=	"编辑框";
 DGSGridList			=	"网格列表";
 DGSImage			=	"图片";
 DGSLabel			=	"文本框";
