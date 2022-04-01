@@ -31,6 +31,8 @@
 	<file src="icons/DGSSwitchButton.png" />
 	<file src="icons/DGSTabPanel.png" />
 	<file src="icons/DGSWindow.png" />
+	<file src="icons/DGSGCode.png" />
+	<file src="icons/DGSTexture.png" />
 
 	<oop>true</oop>
 </meta>
