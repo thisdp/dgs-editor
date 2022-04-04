@@ -1,4 +1,5 @@
 --The syntax of this file is Lua Table.
+Languages			=	"Языки";
 Language			=	"ru";		    --language abbreviate
 LanguageDetail		=	"Russian";  	--language full name
 DGSWidgets			=	"DGS Виджеты";
@@ -11,14 +12,14 @@ DGSComboBox			=	"Спискок";
 DGSEdit				=	"Редактируемое поле";
 DGSGridList			=	"Таблица";
 DGSImage			=	"Изображение";
-DGSLabel			=	"Текстовая метка";
+DGSLabel			=	"Текст";
 DGSMemo				=	"Памятка";
 DGSProgressBar		=	"Индикатор";
 DGSRadioButton		=	"Переключатель";
 DGSScrollBar		=	"Полоса прокрутки";
 DGSScrollPane		=	"Панель прокрутки";
 DGSSelector			=	"Селектор";
-DGSSwitchButton		=	"Кнопка переключения";
+DGSSwitchButton		=	"Выключатель";
 DGSTabPanel			=	"Панель вкладок";
 DGSWindow			=	"Окно";
 
