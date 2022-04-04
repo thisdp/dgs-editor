@@ -1,4 +1,7 @@
-loadstring(exports.dgs:dgsImportOOPClass())()
+--[[
+	Author:		YappiDoor, thisdp, R3mp
+	Note:		Generate the output code from the created elements
+]]
 
 gDecimalPlaces = 2
 gNumberFormat = "%."..tostring(gDecimalPlaces).."f"
@@ -9,10 +12,28 @@ gTableName = "dgs"
 function generateCode()
 	local code = ""
 	variables = {}
+	
+	if #dgsEditor.Textures > 0 then
+		local prefix = "\ntexture = {\n"
+
+		local count = 1
+		for i, texture in pairs(dgsEditor.Textures) do
+			local name, url = unpack(dgsGetProperty(texture, "textureInfo"))
+			local texture = dgsRemoteImageGetTexture(texture)
+			if url and texture and isElement(texture) then
+				prefix = prefix.."    ["..count.."] = {dgsCreateRemoteImage('"..url.."')},\n"
+				count = count + 1
+			end
+		end
+		local prefix = prefix.."}\n"
+
+		code = prefix..code
+	end
 
 	for dgsElement, element in pairs(dgsEditor.ElementList) do
-		if element.isCreatedByEditor then
-			local c = generateCode_process(element, 1)
+		if element.isCreatedByEditor and not element.editorParent then
+			local c = generateCode_process(element)
+			element.editorParent = false
 
 			if c and c ~= "" then
 				local count = 1
@@ -40,29 +61,40 @@ function generateCode()
 		local prefix = prefix.."}\n"
 
 		code = prefix..code
-	end
+	end	
 
 	return code
 end
 
-function generateCode_process(element)
+function generateCode_process(element,parent,parentType)
 	local code = ""
 
-	code = generateCode_element(element) --[[.. "\n"]]
+	local elementType = element:getType():sub(7)
+	if not variables[elementType] then
+		variables[elementType] = 1
+	end
+
+	code = generateCode_element(element,parent,parentType) --[[.. "\n"]]
 
 	local c = element.children
 
 	if c and #c > 0 then
 		local done = false
 
-		for _, child in ipairs(c) do
-			if child.isCreatedByEditor then
+		for i, child in ipairs(c) do
+			if child and child == dgsEditor.Controller then
+				child = dgsGetInstance(dgsEditor.Controller.BoundChild)
+			end
+
+			if child and child.isCreatedByEditor then
 				if not done then
 					code = code.."\n"
-					done = true
+					if i == #c then
+						done = true
+					end
 				end
-
-				code = code..generateCode_process(child)
+				child.editorParent = true
+				code = code..generateCode_process(child,variables[elementType]-1,elementType)
 			end
 		end
 
@@ -74,24 +106,21 @@ function generateCode_process(element)
 	return code
 end
 
-function generateCode_element(element)
+function generateCode_element(element,parent,parentType)
 	local elementType = element:getType():sub(5)
 
 	if generateCodeWidget[elementType] then
-		local code = "\n"..generateCodeWidget[elementType](element, generateCode_common(element,elementType:sub(3)))
+		local code = "\n"..generateCodeWidget[elementType](element, generateCode_common(element,elementType:sub(3),parent,parentType))
 		return code
 	end
 
 	return ""
 end
 
-function generateCode_common(element,elementType)
+function generateCode_common(element,elementType,parent,parentType)
 	local common = {}
 
-	if not variables[elementType] then
-		variables[elementType] = 1
-	end
-	local variable = variables[elementType] or 0
+	local variable = variables[elementType]
 	common.variable = gTableName.."."..elementType.."["..variable.."]"
 	variables[elementType] = variable + 1
 
@@ -102,8 +131,8 @@ function generateCode_common(element,elementType)
 		common.text = ""
 	end
 
-	if element.parent then
-		common.parent = ", "..tostring(element.parent.dgsElment)..")"
+	if parent and parentType then
+		common.parent = ", "..gTableName.."."..parentType.."["..parent.."]"..")"
 	else
 		common.parent = ")"
 	end
@@ -113,29 +142,48 @@ function generateCode_common(element,elementType)
 
 	if properties then 
 		for property, value in pairs(properties) do
-			if not table.find(gExceptions,property) then
+			if value ~= nil and not table.find(gExceptions,property) and not (elementType == "image" and property == "image") then
 				local propertyValues = unpack(dgsGetRegisteredProperties(element:getType(),true)[property])
 				-- Find color argument
-				if type(propertyValues) ~= "table" and tostring(propertyValues):find(128) then
-					local r,g,b,a = fromcolor(value,true)
-					value = "tocolor("..r..", "..g..", "..b..", "..a..")"
+				if type(propertyValues) ~= "table" then
+					if table.find(dgsListPropertyTypes(propertyValues),"Color") then
+						local r,g,b,a = fromcolor(value,true)
+						value = "tocolor("..r..", "..g..", "..b..", "..a..")"
+					end
 				end
 				if type(propertyValues) == "table" then
 					for i, v in pairs(propertyValues) do
-						if type(v) ~= "table" and tostring(v):find(128) then
-							local r,g,b,a = fromcolor(value[i],true)
-							value[i] = "tocolor("..r..", "..g..", "..b..", "..a..")"
+						if type(v) ~= "table" then
+							if table.find(dgsListPropertyTypes(v),"Color") then
+								local r,g,b,a = fromcolor(value[i],true)
+								value[i] = "tocolor("..r..", "..g..", "..b..", "..a..")"
+							end
+						end
+					end
+				end
+				-- Find material argument
+				if type(propertyValues) ~= "table" then
+					if table.find(dgsListPropertyTypes(propertyValues),"Material") then
+						value = "texture["..(element.textureID or 1).."]"
+					end
+				end
+				if type(propertyValues) == "table" then
+					for i, v in pairs(propertyValues) do
+						if type(v) ~= "table" then
+							if table.find(dgsListPropertyTypes(v),"Material") then
+								value[i] = "texture["..(element.textureID or 1).."]"
+							end
 						end
 					end
 				end
 				local value = inspect(value)
-				local value = value:gsub("{ ","{"):gsub(" }","}"):gsub('"tocolor','tocolor'):gsub('%)"',')')
+				local value = value:gsub("{ ","{"):gsub(" }","}"):gsub('"tocolor','tocolor'):gsub('%)"','%)'):gsub('"texture%[',"texture%["):gsub('%]"','%]')
 				common.propertiesString = common.propertiesString.."\ndgsSetProperty("..common.variable..", \""..property.."\", "..value..")"
 			end
 		end
 	end
 
-	if dgsEditor.Controller.BoundChild == element.dgsElement then 
+	if dgsEditor.Controller.BoundChild == element.dgsElement then
 		element = dgsEditor.Controller
 	end
 
@@ -190,7 +238,7 @@ generateCodeWidget = {
 		return output
 	end,
 	dximage = function(element, common)
-		local image = "image" -- path
+		local image = element.textureID and "texture["..(element.textureID or 1).."]" or "nil"
 		local output = common.variable.." = dgsCreateImage("..common.position..", "..common.size..", "..image..", "..common.relative..common.parent
 
 		output = output..common.propertiesString

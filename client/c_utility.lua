@@ -83,6 +83,9 @@ predefColors = {
 --Background window color
 backgroundColor = tocolor(69,69,69,255)
 
+--Empty texture
+emptyTexture = dxCreateTexture(0,0)
+
 ------------------Table
 --t1<--t2
 function table.deepcopy(obj)

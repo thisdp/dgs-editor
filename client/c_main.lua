@@ -77,7 +77,6 @@ function dgsEditorSwitchState(state)
 		if dgsEditorContext.state == "available" then --First, state need to be "available"
 			dgsEditor.state = "enabled"	--Enabled
 			dgsEditorMakeOutput(translateText({"EditorEnabled"}))
-			triggerEvent("onClientDGSEditorStateChanged",resourceRoot,dgsEditor.state)
 			if not dgsEditor.Created then
 				loadstring(exports[dgsEditorContext.dgsResourceName]:dgsImportOOPClass())()
 				dgsRootInstance:setElementKeeperEnabled(true)
@@ -90,12 +89,16 @@ function dgsEditorSwitchState(state)
 				dgsEditor.BackGround.visible = true
 			end
 			showCursor(true)
+			triggerEvent("onClientDGSEditorStateChanged",resourceRoot,dgsEditor.state)
 		end
 	elseif state == "disabled" then		--If someone want to disable dgs editor
 		--Just disable
 		dgsEditor.state = "disabled"
 		dgsEditorMakeOutput(translateText({"EditorDisabled"}))
 		dgsEditor.BackGround.visible = false
+		for _, menu in pairs(dgsEditor.Menus) do
+			dgsSetVisible(menu,false)
+		end
 		showCursor(false)
 		triggerEvent("onClientDGSEditorStateChanged",resourceRoot,dgsEditor.state)
 	end
@@ -256,15 +259,12 @@ function dgsEditorCreateMainPanel()
 		:on("dgsGridListSelect",function(rNew,_,rOld,_)
 			if rOld ~= -1 and rNew == -1 then
 				source:setSelectedItem(rOld)
+				return
 			end
-		end)
-		:on("dgsGridListItemDoubleClick",function(button,state,row)
-			if button == "left" and state == "down" then
-				if row and row ~= -1 then
-					local lang = source:getItemData(row,1)
-					setEditorSetting("UsingLanguage",lang)
-					setCurrentLanguage(lang)
-				end
+			if rNew ~= -1 then
+				local lang = source:getItemData(rNew,1)
+				setEditorSetting("UsingLanguage",lang)
+				setCurrentLanguage(lang)
 			end
 		end)
 	dgsEditor.Languages:addColumn(_,1)
@@ -278,7 +278,6 @@ function dgsEditorCreateMainPanel()
 	--Properties Main
 	dgsEditor.WidgetPropertiesMain  = dgsEditor.BackGround:dgsWindow(sW-350,0,350,0.5*sH,{"DGSProperties"},false)
 		:setCloseButtonEnabled(false)
-		--:setSizable(false)
 		:setMovable(false)
 		:setProperties({
 			shadow = {1,1,0xFF000000},
@@ -313,7 +312,7 @@ function dgsEditorCreateMainPanel()
 	table.insert(dgsEditor.Menus,dgsEditorCreateTexturesMenu())
 	table.insert(dgsEditor.Menus,dgsEditorCreateGenerateCode())
 
-	--button show menu
+	--Buttons show menu
 	for i, name in pairs(DGSEditorMenuReference) do
 		local texture = DxTexture("icons/"..name[1]..".png")
 		local btn = dgsEditor.BackGround:dgsButton(40*(i-1)+10*i,sH-50,40,40,"",false)
@@ -383,6 +382,10 @@ function dgsEditorCreateElement(...)
 	createdElement.childOutsideHit = true
 	--When clicking the element
 	createdElement:on("dgsMouseClickDown",function(button,state)
+		--Make the 8 circle controller always front
+		for i=1,#dgsEditor.Controller.controller do
+			dgsGetInstance(dgsEditor.Controller.controller[i]):bringToFront()
+		end
 		if button == "left" then
 			if dgsEditor.Controller.FindParent then
 				--Set the parent to the element
@@ -399,8 +402,6 @@ function dgsEditorCreateElement(...)
 			else
 				--Don't attach if the element is already attached
 				if dgsEditor.Controller.BoundChild and dgsEditor.Controller.BoundChild == createdElement.dgsElement then
-					--Make the target element move back
-					createdElement:moveToBack()
 					return
 				end
 				--Just click
@@ -745,7 +746,7 @@ dgsEditorAttachProperty = {
 		local imgBack = dgsEditor.WidgetPropertiesMenu:dgsImage(0,0,20,20,shader,false)
 		attachToScrollPane(imgBack,dgsEditor.WidgetPropertiesMenu,row)
 		dgsAttachToAutoDestroy(shader,imgBack.dgsElement)
-		local circleImage = dgsCreateCircle(0.45,0,360,tocolor(r,g,b,a))
+		local circleImage = dgsCreateCircle(0.48,0,360,tocolor(r,g,b,a))
 		dxSetShaderValue(circleImage,"borderSoft",0.02)
 		dgsAddPropertyListener(circleImage,"color")
 		addEventHandler("onDgsPropertyChange",circleImage,function(key,newValue,oldValue)
@@ -788,21 +789,26 @@ dgsEditorAttachProperty = {
 		if i and type(arg) == "table" then arg = arg[i] end
 		if not arg then arg = "" end
 		--Textures combobox
-		if dgsEditor.TexturesList:getRowCount() > 0 then
+		if #dgsEditor.Textures > 0 then
 			local combobox = dgsEditor.WidgetPropertiesMenu:dgsComboBox(0,0,150,20,false)
-			for i=1, dgsEditor.TexturesList:getRowCount() do
-				local textureName = dgsEditor.TexturesList:getItemText(i,2)
-				local texture = dgsEditor.TexturesList:getItemData(i,3)
-				if textureName and texture then
-					combobox:addItem(textureName)
-					combobox:setItemData(i,texture)
+			local empty = combobox:addItem("None")
+			combobox:setItemData(empty,emptyTexture)
+			for i, texture in pairs(dgsEditor.Textures) do
+				local textureName = unpack(dgsGetProperty(texture, "textureInfo"))
+				local texture = dgsRemoteImageGetTexture(texture)
+				if textureName and texture and isElement(texture) then
+					local row = combobox:addItem(textureName)
+					combobox:setItemData(row,texture)
 					if textureName == arg then
-						combobox:setSelectedItem(i)
+						combobox:setSelectedItem(row)
 					end
 				end
 			end
 			combobox:on("dgsComboBoxSelect",function(row)
 				changeProperty(targetElement,property,source:getItemData(row),i,t)
+				local row = row - 1
+				if row == 0 then row = nil end
+				targetElement.textureID = row
 			end)
 			attachToScrollPane(combobox,dgsEditor.WidgetPropertiesMenu,row)
 		else
@@ -839,7 +845,7 @@ dgsEditorAttachProperty = {
 									if arg == "String" then value = "" end
 									if arg == "Color" then value = tocolor(0,0,0,255) end
 									if arg == "Text" then value = "" end
-									if arg == "Material" then value = dxCreateTexture(0,0) end
+									if arg == "Material" then value = emptyTexture end
 									values[b][c] = value
 								end
 							else
@@ -855,7 +861,7 @@ dgsEditorAttachProperty = {
 								if arg == "String" then value = "" end
 								if arg == "Color" then value = tocolor(0,0,0,255) end
 								if arg == "Text" then value = "" end
-								if arg == "Material" then value = dxCreateTexture(0,0) end
+								if arg == "Material" then value = emptyTexture end
 								values[b] = value
 							end
 						end
@@ -949,7 +955,7 @@ dgsEditorGridListAttachProperty = {
 		local imgBack = dgsEditor.GridListDataColumnProperty:dgsImage(0,0,20,20,shader,false)
 		attachToScrollPane(imgBack,dgsEditor.GridListDataColumnProperty,row)
 		dgsAttachToAutoDestroy(shader,imgBack.dgsElement)
-		local circleImage = dgsCreateCircle(0.45,0,360,tocolor(r,g,b,a))
+		local circleImage = dgsCreateCircle(0.48,0,360,tocolor(r,g,b,a))
 		dxSetShaderValue(circleImage,"borderSoft",0.02)
 		dgsAddPropertyListener(circleImage,"color")
 		addEventHandler("onDgsPropertyChange",circleImage,function(key,newValue,oldValue)
@@ -989,17 +995,36 @@ function dgsEditorPropertiesMenuAttach(targetElement)
 	table.sort(keys)
 	for i=1,#keys do
 		local property = keys[i]
-		local pTemplate = propertiesList[property]
-		for t, arguments in pairs(pTemplate) do
-			if type(arguments) == "table" then
-				--Сhecking whether this property is set
-				if targetElement[property] and type(targetElement[property]) == "table" and #targetElement[property] > 0 then
-					if #pTemplate > 1 and pTemplate[#pTemplate] ~= 1 then
-						--If there are several arguments in the argument
-						for i, arg in pairs(arguments) do
-							if type(arg) == "table" then
-								for c, a in pairs(arg) do
-									local arg = dgsListPropertyTypes(a)
+		if property ~= "visible" and property ~= "enabled" then
+			local pTemplate = propertiesList[property]
+			for t, arguments in pairs(pTemplate) do
+				if type(arguments) == "table" then
+					--Сhecking whether this property is set
+					if targetElement[property] and type(targetElement[property]) == "table" and #targetElement[property] > 0 then
+						if #pTemplate > 1 and pTemplate[#pTemplate] ~= 1 then
+							--If there are several arguments in the argument
+							for i, arg in pairs(arguments) do
+								if type(arg) == "table" then
+									for c, a in pairs(arg) do
+										local arg = dgsListPropertyTypes(a)
+										if type(arg) == "table" then
+											local check = table.find(arg,"Nil")
+											if check then table.remove(arg,check) end
+										end
+										local arg = arg[2] or arg[1]
+										local attach = dgsEditorAttachProperty[arg]
+										if attach then
+											--Add row section
+											local text = DGSPropertyItemNames[property] and DGSPropertyItemNames[property][i] or i
+											if c == 1 then
+												local rowSection = addRow(dgsEditor.WidgetPropertiesMenu,property.." "..(text[c] or ""),true)
+											end
+											local row = addRow(dgsEditor.WidgetPropertiesMenu,text[c+1])
+											attach(targetElement,property,row,text[i+c],c,i)
+										end
+									end
+								else
+									local arg = dgsListPropertyTypes(arg)
 									if type(arg) == "table" then
 										local check = table.find(arg,"Nil")
 										if check then table.remove(arg,check) end
@@ -1008,15 +1033,18 @@ function dgsEditorPropertiesMenuAttach(targetElement)
 									local attach = dgsEditorAttachProperty[arg]
 									if attach then
 										--Add row section
-										local text = DGSPropertyItemNames[property] and DGSPropertyItemNames[property][i] or i
-										if c == 1 then
-											local rowSection = addRow(dgsEditor.WidgetPropertiesMenu,property.." "..(text[c] or ""),true)
+										local text = DGSPropertyItemNames[property] and DGSPropertyItemNames[property][t] or {}
+										if i == 1 then
+											local rowSection = addRow(dgsEditor.WidgetPropertiesMenu,property.." "..(text[i] or ""),true)
 										end
-										local row = addRow(dgsEditor.WidgetPropertiesMenu,text[c+1])
-										attach(targetElement,property,row,text[i+c],c,i)
+										local row = addRow(dgsEditor.WidgetPropertiesMenu,text[i+1])
+										attach(targetElement,property,row,text[i+1],i,t)
 									end
 								end
-							else
+							end
+						else
+							--If there are several arguments
+							for i, arg in pairs(arguments) do
 								local arg = dgsListPropertyTypes(arg)
 								if type(arg) == "table" then
 									local check = table.find(arg,"Nil")
@@ -1026,54 +1054,34 @@ function dgsEditorPropertiesMenuAttach(targetElement)
 								local attach = dgsEditorAttachProperty[arg]
 								if attach then
 									--Add row section
-									local text = DGSPropertyItemNames[property] and DGSPropertyItemNames[property][t] or {}
 									if i == 1 then
-										local rowSection = addRow(dgsEditor.WidgetPropertiesMenu,property.." "..(text[i] or ""),true)
+										local rowSection = addRow(dgsEditor.WidgetPropertiesMenu,property,true)
 									end
-									local row = addRow(dgsEditor.WidgetPropertiesMenu,text[i+1])
-									attach(targetElement,property,row,text[i+1],i,t)
+									local text = DGSPropertyItemNames[property] and DGSPropertyItemNames[property][i] or i
+									local row = addRow(dgsEditor.WidgetPropertiesMenu,text)
+									attach(targetElement,property,row,text,i)
 								end
 							end
 						end
 					else
-						--If there are several arguments
-						for i, arg in pairs(arguments) do
-							local arg = dgsListPropertyTypes(arg)
-							if type(arg) == "table" then
-								local check = table.find(arg,"Nil")
-								if check then table.remove(arg,check) end
-							end
-							local arg = arg[2] or arg[1]
-							local attach = dgsEditorAttachProperty[arg]
-							if attach then
-								--Add row section
-								if i == 1 then
-									local rowSection = addRow(dgsEditor.WidgetPropertiesMenu,property,true)
-								end
-								local text = DGSPropertyItemNames[property] and DGSPropertyItemNames[property][i] or i
-								local row = addRow(dgsEditor.WidgetPropertiesMenu,text)
-								attach(targetElement,property,row,text,i)
-							end
-						end
+						--Add a button to add a property
+						local row = addRow(dgsEditor.WidgetPropertiesMenu,property,true)
+						dgsEditorAttachProperty.add(targetElement,property,row)
+						break
 					end
 				else
-					--Add a button to add a property
-					local row = addRow(dgsEditor.WidgetPropertiesMenu,property,true)
-					dgsEditorAttachProperty.add(targetElement,property,row)
-					break
-				end
-			else
-				--If one argument
-				local arg = dgsListPropertyTypes(arguments)
-				if type(arg) == "table" then
-					local check = table.find(arg,"Nil")
-					if check then table.remove(arg,check) end
-				end
-				local arg = arg[2] or arg[1]
-				local attach = dgsEditorAttachProperty[arg]
-				if attach then
-					local row = addRow(dgsEditor.WidgetPropertiesMenu,property,true)
-					attach(targetElement,property,row)
+					--If one argument
+					local arg = dgsListPropertyTypes(arguments)
+					if type(arg) == "table" then
+						local check = table.find(arg,"Nil")
+						if check then table.remove(arg,check) end
+					end
+					local arg = arg[2] or arg[1]
+					local attach = dgsEditorAttachProperty[arg]
+					if attach then
+						local row = addRow(dgsEditor.WidgetPropertiesMenu,property,true)
+						attach(targetElement,property,row)
+					end
 				end
 			end
 		end
@@ -1123,7 +1131,7 @@ function dgsEditorPropertiesMenuAttach(targetElement)
 				dgsEditorPropertiesMenuDetach()
 				dgsEditorControllerAttach(c)
 			end)
-		attachToScrollPane(edit,dgsEditor.WidgetPropertiesMenu,row)
+		attachToScrollPane(edit,dgsEditor.WidgetPropertiesMenu,rowSection)
 	else
 		local row = addRow(dgsEditor.WidgetPropertiesMenu,"parent",true)
 		local edit = dgsEditor.WidgetPropertiesMenu:dgsButton(10,5,150,20,"set parent",false)
@@ -1460,7 +1468,7 @@ end
 ----------------Generation Code Menu
 function dgsEditorCreateGenerateCode()
 	--Generate Code Main
-	dgsEditor.GenerateMain = dgsWindow(0,sH-300,300,300,"Grid list data settings",false)
+	dgsEditor.GenerateMain = dgsWindow(0,sH-300,300,300,"Generate Code",false)
 		:setProperties({
 			shadow = {1,1,0xFF000000},
 			titleColorBlur = false,
@@ -1810,6 +1818,7 @@ end
 
 ----------------Textures Menu
 function dgsEditorCreateTexturesMenu()
+	dgsEditor.Textures = {}
 	--textures Main
 	dgsEditor.TexturesMain = dgsWindow(0,0,470,350,"Textures",false)
 		:setSizable(false)
@@ -1831,18 +1840,45 @@ function dgsEditorCreateTexturesMenu()
 			local row = dgsEditor.TexturesList:addRow(_,id..".","texture"..id)
 			dgsEditor.TexturesList:setItemData(row,2,"texture"..id)
 			dgsEditor.TexturesList:setSelectedItem(row)
+			dgsEditor.Textures[row] = dgsCreateRemoteImage("")
+			dgsSetProperty(dgsEditor.Textures[row],"textureInfo",{"texture"..id,false})
+			dgsEditor.TexturePrivew:setImage(dgsEditor.Textures[row])
 		end)
 	addElementOutline(btnAdd)
 	local btnRemove = dgsEditor.TexturesMain:dgsButton(65,10,40,20,"▬",false)
 		:on("dgsMouseClickDown",function()
 			local row = dgsEditor.TexturesList:getSelectedItem()
 			if row ~= -1 then
+				dgsEditor.TextureURL:setEnabled(false)
+				dgsEditor.TextureName:setEnabled(false)
 				dgsEditor.TexturesList:removeRow(row)
+				dgsEditor.TextureURL:setText("")
+				dgsEditor.TextureName:setText("")
+				dgsEditor.TexturePrivew:setImage(nil)
+				--Destroy remote image
+				local remoteImage = dgsEditor.Textures[row]
+				local texture = dgsRemoteImageGetTexture(remoteImage)
+				if texture and isElement(texture) then
+					--Remove the property if the element has this texture set
+					for dgsElement, element in pairs(dgsEditor.ElementList) do
+						if element.dgsEditorPropertyList then
+							for property, value in pairs(element.dgsEditorPropertyList) do
+								if type(value) == "table" and table.find(value,tostring(texture)) then
+									element.textureID = nil
+									resetProperty(element,property)
+								end
+								if type(value) ~= "table" and tostring(value):find(tostring(texture)) then
+									element.textureID = nil
+									resetProperty(element,property)
+								end
+							end
+						end
+					end
+					destroyElement(texture)
+				end
+				destroyElement(remoteImage)
+				dgsEditor.Textures[row] = nil
 			end
-			dgsEditor.TextureURL:setText("")
-			dgsEditor.TextureName:setText("")
-			dgsEditor.TextureURL:setEnabled(false)
-			dgsEditor.TextureName:setEnabled(false)
 		end)
 	addElementOutline(btnRemove)
 
@@ -1853,46 +1889,34 @@ function dgsEditorCreateTexturesMenu()
 			scrollBarThick = 10,
 			sortEnabled = false,
 		})
-		:on("dgsGridListSelect",function(rowNew)
-			if rowNew ~= -1 then
-				dgsEditor.TextureURL:setEnabled(true)
-				dgsEditor.TextureName:setEnabled(true)
-				local dataURL = dgsEditor.TexturesList:getItemData(rowNew,1)
+		:on("dgsGridListSelect",function(row)
+			if row ~= -1 then
+				local dataURL = dgsEditor.TexturesList:getItemData(row,1)
 				if dataURL then
 					dgsEditor.TextureURL:setText(dataURL)
 				else
 					dgsEditor.TextureURL:setText("")
 				end
-				local dataName = dgsEditor.TexturesList:getItemData(rowNew,2)
-				if dataName then
-					dgsEditor.TextureName:setText(dataName)
-				else
-					dgsEditor.TextureName:setText("")
-				end
+				local dataName = dgsEditor.TexturesList:getItemText(row,2)
+				dgsEditor.TextureName:setText(dataName)
+				dgsEditor.TexturePrivew:setImage(dgsEditor.Textures[row])
+				dgsEditor.TextureURL:setEnabled(true)
+				dgsEditor.TextureName:setEnabled(true)
 			else
-				dgsEditor.TextureURL:setText("")
-				dgsEditor.TextureName:setText("")
 				dgsEditor.TextureURL:setEnabled(false)
 				dgsEditor.TextureName:setEnabled(false)
+				dgsEditor.TextureURL:setText("")
+				dgsEditor.TextureName:setText("")
+				dgsEditor.TexturePrivew:setImage(nil)
 			end
 		end)
 	dgsEditor.TexturesList:addColumn("id",0.1)
 	dgsEditor.TexturesList:addColumn("name",0.9)
 	dgsEditor.TexturesList:addColumn("",0)
-
-	--preview texture
-	local remoteImage = dgsCreateRemoteImage("")
-	addEventHandler("onDgsRemoteImageLoad",remoteImage,function()
-		local row = dgsEditor.TexturesList:getSelectedItem()
-		if row ~= -1 then
-			local texture = dgsRemoteImageGetTexture(source)
-			dgsEditor.TexturesList:setItemData(row,3,texture)
-		end
-	end)
 	
 	dgsEditor.TexturesMain:dgsLabel(220,10,240,20,"Texture preview:",false)
 		:setProperty("alignment",{"left","center"})
-	dgsEditor.TexturePrivew = dgsEditor.TexturesMain:dgsImage(220,40,240,150,remoteImage,false)
+	dgsEditor.TexturePrivew = dgsEditor.TexturesMain:dgsImage(220,40,240,150,_,false)
 	--texture URL
 	dgsEditor.TexturesMain:dgsLabel(220,200,240,20,"URL:",false)
 		:setProperty("alignment",{"left","center"})
@@ -1900,18 +1924,18 @@ function dgsEditorCreateTexturesMenu()
 		:setEnabled(false)
 		:on("dgsTextChange",function()
 			local row = dgsEditor.TexturesList:getSelectedItem()
-			if row ~= -1 then
-				if not dgsGetRemoteImageLoadState(remoteImage) then
-					dgsRemoteImageAbort(remoteImage)
-				end
-				if dgsRemoteImageGetTexture(remoteImage) then
-					destroyElement(dgsRemoteImageGetTexture(remoteImage))
-				end
-				dgsRemoteImageRequest(remoteImage,source:getText())
-				dgsEditor.TexturesList:setItemData(row,1,source:getText())
-			else
-				if dgsRemoteImageGetTexture(remoteImage) then
-					destroyElement(dgsRemoteImageGetTexture(remoteImage))
+			if row ~= -1 and source:getEnabled() then
+				local texture = dgsEditor.Textures[row]
+				if texture then
+					if not dgsGetRemoteImageLoadState(texture) then
+						dgsRemoteImageAbort(texture)
+					end
+					if dgsRemoteImageGetTexture(texture) then
+						destroyElement(dgsRemoteImageGetTexture(texture))
+					end
+					dgsRemoteImageRequest(texture,source:getText())
+					dgsSetProperty(dgsEditor.Textures[row],"textureInfo",{dgsEditor.TextureName:getText(),source:getText()})
+					dgsEditor.TexturesList:setItemData(row,1,source:getText())
 				end
 			end
 		end)
@@ -1924,9 +1948,11 @@ function dgsEditorCreateTexturesMenu()
 		:setEnabled(false)
 		:on("dgsTextChange",function()
 			local row = dgsEditor.TexturesList:getSelectedItem()
-			if row ~= -1 then
+			if row ~= -1 and source:getEnabled() then
 				dgsEditor.TexturesList:setItemText(row,2,source:getText())
-				dgsEditor.TexturesList:setItemData(row,2,source:getText())
+				if dgsEditor.Textures[row] then
+					dgsSetProperty(dgsEditor.Textures[row],"textureInfo",{source:getText(),dgsEditor.TextureURL:getText()})
+				end
 			end
 		end)
 	addElementOutline(dgsEditor.TextureName)
@@ -2054,9 +2080,31 @@ function changeProperty(element,property,newValue,i,t)
 	
 	local tempPropertyList = element.dgsEditorPropertyList
 	if not tempPropertyList then tempPropertyList = {} end
+	--Save initial property
+	if tempPropertyList[property] == nil then
+		local initialValue = element.dgsEditorInitialValue
+		if not initialValue then initialValue = {} end
+		initialValue[property] = oldValue
+		element.dgsEditorInitialValue = initialValue
+	end
 	tempPropertyList[property] = newValue
 	element.dgsEditorPropertyList = tempPropertyList
 	saveAction("cancelProperty",{element,property,newValue,oldValue})
+end
+
+--Reset property
+function resetProperty(element,property)
+	if element and element.dgsEditorInitialValue and element.dgsEditorInitialValue[property] ~= nil then
+		element[property] = element.dgsEditorInitialValue[property]
+
+		local initialValue = element.dgsEditorInitialValue
+		initialValue[property] = nil
+		element.dgsEditorInitialValue = initialValue
+
+		local tempPropertyList = element.dgsEditorPropertyList
+		tempPropertyList[property] = nil
+		element.dgsEditorPropertyList = tempPropertyList 
+	end
 end
 
 --Save actions
@@ -2117,8 +2165,8 @@ end
 
 --hide menu
 addEventHandler("onDgsWindowClose",root,function()
+	cancelEvent()
 	if table.find(dgsEditor.Menus,source) then
-		cancelEvent()
 		dgsSetVisible(source,false)
 	end
 end)
