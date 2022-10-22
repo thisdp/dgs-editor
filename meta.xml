@@ -7,6 +7,7 @@
 	<file src="languages/ar.lang" />
 	<file src="languages/pt-br.lang" />
 	<file src="languages/ru.lang" />
+	<file src="languages/es-es.lang" />
 	
 	<script src="client/c_utility.lua" type="client" />
 	<script src="client/c_settings.lua" type="client" />
