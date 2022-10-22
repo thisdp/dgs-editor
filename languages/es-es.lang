@@ -1,0 +1,35 @@
+--The syntax of this file is Lua Table.
+Languages			=	"Languages";
+Language			=	"es-es";		--language abbreviate
+LanguageDetail		=	"Español España";	--language full name
+DGSWidgets			=	"Widgets De DGS";
+DGSProperties		=	"Lista De Propiedades DGS";
+Basic				=	"Basico";
+Plugins				=	"Plugins";
+DGSButton			=	"Boton";
+DGSCheckBox			=	"Check Box";
+DGSComboBox			=	"Combo Box";
+DGSEdit				=	"Edit";
+DGSGridList			=	"Grid List";
+DGSImage			=	"Imagen";
+DGSLabel			=	"Texto";
+DGSMemo				=	"Memo";
+DGSProgressBar		=	"Barra de progreso";
+DGSRadioButton		=	"Radio Button";
+DGSScrollBar		=	"Scroll Bar";
+DGSScrollPane		=	"Scroll Pane";
+DGSSelector			=	"Selector";
+DGSSwitchButton		=	"Switch Button";
+DGSTabPanel			=	"Tab Panel";
+DGSWindow			=	"Window";
+
+
+
+--Notifications:
+DGSStop				=	"El resource DGS se ah Detenido!";
+DGSIsNotRun			=	"No se ha podido encontrar el recurso DGS en funcionamiento, Por favor, inicie su DGS!";
+DGSIsRun			=	"Se ha detectado un recurso DGS. El editor ya está disponible!";
+FailToChgLang		=	"No se puede cambiar el idioma %rep%";
+ChgLang				=	"Lenguaje cambiado a %rep%(%rep%)";
+EditorEnabled		=	"El Editor Esta #00FF00Activado!";
+EditorDisabled		=	"El Editor Esta #FF0000Desactivado!";
