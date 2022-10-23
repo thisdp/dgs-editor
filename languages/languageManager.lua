@@ -4,7 +4,8 @@ Language = {
 		"zh-cn",
 		"ar",
 		"pt-br",
-		"ru"
+		"ru",
+		"es-es"
 	},
 	Loaded = {},
 	UsingLanguageTable = false,
