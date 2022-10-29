@@ -989,7 +989,7 @@ dgsEditorGridListAttachProperty = {
 ----------------Properties attach/detach
 function dgsEditorPropertiesMenuAttach(targetElement)
 	--Window type element
-	dgsEditor.WidgetPropertiesMain:setText(Language.UsingLanguageTable.DGSProperties or "DGSProperties"..", "..targetElement:getType())
+	dgsEditor.WidgetPropertiesMain:setText(Language.UsingLanguageTable.DGSProperties..", "..targetElement:getType())
 	local propertiesList = dgsGetRegisteredProperties(targetElement:getType(),true)
 	local keys = table.listKeys(propertiesList)
 	table.sort(keys)
