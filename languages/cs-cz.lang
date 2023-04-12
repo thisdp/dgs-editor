@@ -1,0 +1,35 @@
+--The syntax of this file is Lua Table.
+Languages			=	"Jazyky";
+Language			=	"cs-cz";		--language abbreviate
+LanguageDetail		=	"Čeština";	--language full name
+DGSWidgets			=	"DGS Doplňky";
+DGSProperties		=	"DGS Vlastnosti";
+Basic				=	"Základní";
+Plugins				=	"Pluginy";
+DGSButton			=	"Tlačítko";
+DGSCheckBox			=	"Zaškrtávací políčko";
+DGSComboBox			=	"Kombinované políčko";
+DGSEdit				=	"Změnit";
+DGSGridList			=	"Mřížkový seznam";
+DGSImage			=	"Obrázek";
+DGSLabel			=	"Štítek";
+DGSMemo				=	"Memo";
+DGSProgressBar		=	"Průběhový bar";
+DGSRadioButton		=	"Přepínač";
+DGSScrollBar		=	"Posuvník";
+DGSScrollPane		=	"Dolní posuvník";
+DGSSelector			=	"Ukazatel";
+DGSSwitchButton		=	"Přepínací tlačítko";
+DGSTabPanel			=	"Tabový panel";
+DGSWindow			=	"Okno";
+
+
+
+--Notifications:
+DGSStop				=	"DGS script byl zastaven!";
+DGSIsNotRun			=	"DGS script je momentálně vypnut, zapni ho!";
+DGSIsRun			=	"DGS script detekován, editor je momentálně funkční!";
+FailToChgLang		=	"Změnění jazyka na %rep% selhalo";
+ChgLang				=	"Jazyk změněn na %rep%(%rep%)";
+EditorEnabled		=	"Editor je momentálně #00FF00Zapnut!";
+EditorDisabled		=	"Editor je momentálně #FF0000Vypnut!";
