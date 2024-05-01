@@ -79,7 +79,6 @@ function dgsEditorSwitchState(state)
 			dgsEditorMakeOutput(translateText({"EditorEnabled"}))
 			if not dgsEditor.Created then
 				loadstring(exports[dgsEditorContext.dgsResourceName]:dgsImportOOPClass())()
-				dgsRootInstance:setElementKeeperEnabled(true)
 				--Set translation dictionary whenever a new language applies
 				dgsRootInstance:setTranslationTable("DGSEditorLanguage",Language.UsingLanguageTable)
 				--Use this dictionary
@@ -377,6 +376,7 @@ function dgsEditorCreateElement(...)
 	elseif dgsType == "dgs-dxtabpanel" then
 		createdElement = dgsEditor.Canvas:dgsTabPanel(0,0,100,100,false)
 	end
+	createdElement.changeOrder = false
 	if x and y then createdElement:setPosition(x,y,false,true) end
 	createdElement.isCreatedByEditor = true
 	createdElement.childOutsideHit = true
@@ -1242,7 +1242,7 @@ function dgsEditorCreateColorPicker()
 					source.parent:setText(arg)
 				end)
 			addElementOutline(btnDown)
-			edit:setWhiteList("[^0-9]")
+			edit:setTextFilter("[^0-9]")
 			edit:bindToColorPicker(dgsEditor.ColorPicker,"RGB","A")
 		else
 			dgsEditor.ColorMain:dgsComponentSelector(205,10+i*30-30,170,15,true,false,_,2)
@@ -1292,7 +1292,7 @@ function dgsEditorCreateColorPicker()
 				source.parent:setText(arg)
 			end)
 		addElementOutline(btnDown)
-		edit:setWhiteList("[^0-9]")
+		edit:setTextFilter("[^0-9]")
 		edit:bindToColorPicker(dgsEditor.ColorPicker,"RGB",attr)
 	end
 
@@ -1341,7 +1341,7 @@ function dgsEditorCreateColorPicker()
 				source.parent:setText(arg)
 			end)
 		addElementOutline(btnDown)
-		edit:setWhiteList("[^0-9]")
+		edit:setTextFilter("[^0-9]")
 		edit:bindToColorPicker(dgsEditor.ColorPicker,"HSL",attr)
 		if attr ~= "H" then
 			dgsEditor.ColorMain:dgsLabel(175,190+i*30-30,0,20,"%",false)
@@ -1394,7 +1394,7 @@ function dgsEditorCreateColorPicker()
 				source.parent:setText(arg)
 			end)
 		addElementOutline(btnDown)
-		edit:setWhiteList("[^0-9]")
+		edit:setTextFilter("[^0-9]")
 		edit:bindToColorPicker(dgsEditor.ColorPicker,"HSV",attr)
 		if attr ~= "H" then
 			dgsEditor.ColorMain:dgsLabel(275,190+i*30-30,0,20,"%",false)
@@ -2165,9 +2165,10 @@ end
 
 --hide menu
 addEventHandler("onDgsWindowClose",root,function()
-	cancelEvent()
+	if not dgsEditor.Menus then return false end
 	if table.find(dgsEditor.Menus,source) then
 		dgsSetVisible(source,false)
+		cancelEvent()
 	end
 end)
 -----------------------------------------------------Start up

@@ -13,7 +13,10 @@
 	<script src="client/c_settings.lua" type="client" />
 	<script src="client/c_main.lua" type="client" />
 	<script src="client/c_generateCode.lua" type="client" />
+	<script src="client/c_io.lua" type="client" />
+	<script src="client/c_action.lua" type="client" />
 	<script src="server/s_main.lua" type="server" />
+	<script src="server/s_io.lua" type="server" />
 
 	<file src="client/alphaCircle.fx" />
 	<file src="icons/DGSButton.png" />
