@@ -1,0 +1,35 @@
+--The syntax of this file is Lua Table.
+Languages			=	"Diller";
+Language			=	"tr-tr";		--language abbreviate
+LanguageDetail		=	"Türkçe";	--language full name
+DGSWidgets			=	"DGS Widgets";
+DGSProperties		=	"DGS Özellikler";
+Basic				=	"Araçlar";
+Plugins				=	"Eklentiler";
+DGSButton			=	"Button";
+DGSCheckBox			=	"Check Box";
+DGSComboBox			=	"Combo Box";
+DGSEdit				=	"Edit";
+DGSGridList			=	"Grid List";
+DGSImage			=	"Image";
+DGSLabel			=	"Label";
+DGSMemo				=	"Memo";
+DGSProgressBar		=	"Progress Bar";
+DGSRadioButton		=	"Radio Button";
+DGSScrollBar		=	"Scroll Bar";
+DGSScrollPane		=	"Scroll Pane";
+DGSSelector			=	"Selector";
+DGSSwitchButton		=	"Switch Button";
+DGSTabPanel			=	"Tab Panel";
+DGSWindow			=	"Window";
+
+
+
+--Notifications:
+DGSStop				=	"DGS scripti durduruldu!";
+DGSIsNotRun			=	"DGS scripti sunucunuzda bulunamadı, lütfen DGS scriptini başlatın!";
+DGSIsRun			=	"DGS scripti tespit edildi, editör artık kullanılabilir!";
+FailToChgLang		=	"Dil değiştirilirken hata oluştu %rep%";
+ChgLang				=	"Dil başarıyla değiştirildi %rep%(%rep%)";
+EditorEnabled		=	"Editör #00FF00Etkinleştirildi!";
+EditorDisabled		=	"Editör #FF0000Devre dışı bırakıldı!";
